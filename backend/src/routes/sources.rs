@@ -97,10 +97,10 @@ async fn generate(
     }
     if !matches!(
         req.kind,
-        JobKind::Flashcards | JobKind::Exam | JobKind::Feynman
+        JobKind::Flashcards | JobKind::Exam | JobKind::Feynman | JobKind::ConceptMap
     ) {
         return Err(AppError::BadRequest(
-            "kind doit être 'flashcards', 'exam' ou 'feynman'".into(),
+            "kind non supporté".into(),
         ));
     }
 
@@ -144,12 +144,22 @@ async fn generate(
         .title
         .clone()
         .unwrap_or_else(|| "Examen blanc".to_string());
+    let map_title = req
+        .title
+        .clone()
+        .unwrap_or_else(|| "Carte conceptuelle".to_string());
     tokio::spawn(async move {
         match kind {
             JobKind::Exam => {
                 ai::generate::run_exam(
                     pool, ai_client, job_id, subject_id, content, count, block_id,
                     block_title, exam_title,
+                )
+                .await;
+            }
+            JobKind::ConceptMap => {
+                ai::generate::run_concept_map(
+                    pool, ai_client, job_id, subject_id, content, block_id, block_title, map_title,
                 )
                 .await;
             }

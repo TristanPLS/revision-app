@@ -1,9 +1,11 @@
 pub mod blocks;
+pub mod concept_maps;
 pub mod cornell;
 pub mod exams;
 pub mod feynman;
 pub mod flashcards;
 pub mod health;
+pub mod schemas;
 pub mod sessions;
 pub mod sources;
 pub mod stats;
@@ -23,6 +25,8 @@ pub fn router(state: AppState) -> Router {
         .merge(exams::routes())
         .merge(feynman::routes())
         .merge(cornell::routes())
+        .merge(concept_maps::routes())
+        .merge(schemas::routes())
         .merge(sessions::routes())
         .merge(stats::routes());
 

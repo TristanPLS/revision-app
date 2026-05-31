@@ -22,10 +22,12 @@ export default function GeneratePage() {
   const [title, setTitle] = useState("");
   const [count, setCount] = useState(10);
   const [blockId, setBlockId] = useState("");
-  const [kind, setKind] = useState<"flashcards" | "exam" | "feynman">("flashcards");
-  const [generatedKind, setGeneratedKind] = useState<"flashcards" | "exam" | "feynman">(
+  const [kind, setKind] = useState<"flashcards" | "exam" | "feynman" | "concept_map">(
     "flashcards"
   );
+  const [generatedKind, setGeneratedKind] = useState<
+    "flashcards" | "exam" | "feynman" | "concept_map"
+  >("flashcards");
   const [jobId, setJobId] = useState<string | null>(null);
 
   const blocks = useQuery({ queryKey: ["blocks", id], queryFn: () => api.blocks.list(id) });
@@ -76,8 +78,16 @@ export default function GeneratePage() {
   const failed = job.data?.status === "failed";
   const result =
     done && job.data?.result && typeof job.data.result === "object"
-      ? (job.data.result as { created?: number; skipped?: number; exam_id?: string })
+      ? (job.data.result as {
+          created?: number;
+          skipped?: number;
+          exam_id?: string;
+          map_id?: string;
+          nodes?: number;
+        })
       : null;
+  const doneCount =
+    generatedKind === "concept_map" ? (result?.nodes ?? 0) : (result?.created ?? 0);
 
   return (
     <div className="space-y-8">
@@ -89,7 +99,7 @@ export default function GeneratePage() {
       </Link>
 
       <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Générer avec l&apos;IA</h1>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Générer avec l&apos;IA</h1>
         <p className="text-muted-foreground">
           Colle ton cours : l&apos;IA en extrait des flashcards atomiques (active recall)
           ou un examen blanc. Tu valides, tu révises, tu recommences.
@@ -98,21 +108,27 @@ export default function GeneratePage() {
 
       <Card>
         <CardContent className="space-y-5 pt-6">
-          <div className="inline-flex rounded-lg border p-1">
-            {(["flashcards", "exam", "feynman"] as const).map((k) => (
+          <div className="flex flex-wrap gap-1 rounded-lg border p-1">
+            {(["flashcards", "exam", "feynman", "concept_map"] as const).map((k) => (
               <button
                 key={k}
                 type="button"
                 onClick={() => setKind(k)}
                 disabled={running}
                 className={cn(
-                  "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   kind === k
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {k === "flashcards" ? "Flashcards" : k === "exam" ? "Examen blanc" : "Menu Feynman"}
+                {k === "flashcards"
+                  ? "Flashcards"
+                  : k === "exam"
+                    ? "Examen"
+                    : k === "feynman"
+                      ? "Feynman"
+                      : "Carte"}
               </button>
             ))}
           </div>
@@ -139,25 +155,27 @@ export default function GeneratePage() {
                 disabled={running}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="count">
-                {kind === "exam"
-                  ? "Nombre de questions"
-                  : kind === "feynman"
-                    ? "Nombre de concepts"
-                    : "Nombre de cartes"}
-              </Label>
-              <Input
-                id="count"
-                type="number"
-                min={1}
-                max={50}
-                value={count}
-                onChange={(e) => setCount(Math.min(50, Math.max(1, Number(e.target.value) || 1)))}
-                className="tabular"
-                disabled={running}
-              />
-            </div>
+            {kind !== "concept_map" && (
+              <div className="space-y-2">
+                <Label htmlFor="count">
+                  {kind === "exam"
+                    ? "Nombre de questions"
+                    : kind === "feynman"
+                      ? "Nombre de concepts"
+                      : "Nombre de cartes"}
+                </Label>
+                <Input
+                  id="count"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={count}
+                  onChange={(e) => setCount(Math.min(50, Math.max(1, Number(e.target.value) || 1)))}
+                  className="tabular"
+                  disabled={running}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="block">Bloc (optionnel)</Label>
               <select
@@ -206,14 +224,15 @@ export default function GeneratePage() {
             <CheckCircle2 className="size-8 text-primary" />
             <div className="flex-1">
               <p className="font-medium">
-                {result?.created ?? 0}{" "}
+                {doneCount}{" "}
                 {generatedKind === "exam"
                   ? "question"
                   : generatedKind === "feynman"
                     ? "concept"
-                    : "carte"}
-                {(result?.created ?? 0) > 1 ? "s" : ""} générée
-                {(result?.created ?? 0) > 1 ? "s" : ""}
+                    : generatedKind === "concept_map"
+                      ? "nœud"
+                      : "carte"}
+                {doneCount > 1 ? "s" : ""} générée{doneCount > 1 ? "s" : ""}
                 {result?.skipped ? ` · ${result.skipped} ignorée(s)` : ""}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -221,7 +240,9 @@ export default function GeneratePage() {
                   ? "Examen prêt — conditions réelles, chrono."
                   : generatedKind === "feynman"
                     ? "Concepts prêts à expliquer à voix haute."
-                    : "Prêtes à réviser en répétition espacée."}
+                    : generatedKind === "concept_map"
+                      ? "Carte conceptuelle prête."
+                      : "Prêtes à réviser en répétition espacée."}
               </p>
             </div>
             <div className="flex gap-2">
@@ -231,6 +252,10 @@ export default function GeneratePage() {
               {generatedKind === "exam" && result?.exam_id ? (
                 <Link href={`/exams/${result.exam_id}/run`} className={cn(buttonVariants())}>
                   Passer l&apos;examen
+                </Link>
+              ) : generatedKind === "concept_map" && result?.map_id ? (
+                <Link href={`/maps/${result.map_id}`} className={cn(buttonVariants())}>
+                  Voir la carte
                 </Link>
               ) : generatedKind === "flashcards" ? (
                 <Link href={`/review?subject=${id}`} className={cn(buttonVariants())}>

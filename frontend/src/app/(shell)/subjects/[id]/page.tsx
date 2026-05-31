@@ -26,6 +26,8 @@ export default function SubjectPage() {
   const exams = useQuery({ queryKey: ["exams", id], queryFn: () => api.exams.list(id) });
   const feynman = useQuery({ queryKey: ["feynman", id], queryFn: () => api.feynman.list(id) });
   const cornell = useQuery({ queryKey: ["cornell", id], queryFn: () => api.cornell.list(id) });
+  const maps = useQuery({ queryKey: ["maps", id], queryFn: () => api.maps.list(id) });
+  const schemas = useQuery({ queryKey: ["schemas", id], queryFn: () => api.schemas.list(id) });
 
   const [blockTitle, setBlockTitle] = useState("");
 
@@ -65,7 +67,7 @@ export default function SubjectPage() {
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {subject.data?.name ?? <Skeleton className="h-9 w-48" />}
           </h1>
           {subject.data?.description && (
@@ -91,7 +93,15 @@ export default function SubjectPage() {
 
       {/* Stats + Leitner */}
       <section className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Progression</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Progression</h2>
+          <Link
+            href={`/subjects/${id}/stats`}
+            className="text-sm text-primary hover:underline"
+          >
+            Insights FSRS →
+          </Link>
+        </div>
         <Card>
           <CardContent className="space-y-5 pt-6">
             <div className="flex flex-wrap gap-6 text-sm">
@@ -238,6 +248,83 @@ export default function SubjectPage() {
             Aucune note.{" "}
             <Link href={`/subjects/${id}/cornell`} className="text-primary hover:underline">
               Crée une note Cornell →
+            </Link>
+          </p>
+        )}
+      </section>
+
+      {/* Concept maps */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Cartes conceptuelles</h2>
+          <Link
+            href={`/subjects/${id}/generate`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <Sparkles className="size-4" /> Générer
+          </Link>
+        </div>
+        {maps.data && maps.data.length > 0 ? (
+          <ul className="divide-y rounded-lg border">
+            {maps.data.map((m) => (
+              <li key={m.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{m.title}</p>
+                  <p className="tabular text-sm text-muted-foreground">
+                    {m.node_count} nœud{m.node_count > 1 ? "s" : ""}
+                  </p>
+                </div>
+                <Link href={`/maps/${m.id}`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                  Ouvrir
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Aucune carte.{" "}
+            <Link href={`/subjects/${id}/generate`} className="text-primary hover:underline">
+              Génère une carte conceptuelle →
+            </Link>
+          </p>
+        )}
+      </section>
+
+      {/* Schemas */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Schémas (dual coding)</h2>
+          <Link
+            href={`/subjects/${id}/schemas`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <Plus className="size-4" /> Schéma
+          </Link>
+        </div>
+        {schemas.data && schemas.data.length > 0 ? (
+          <ul className="divide-y rounded-lg border">
+            {schemas.data.map((sc) => (
+              <li key={sc.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{sc.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {sc.has_drawing ? "Dessiné" : "À dessiner"}
+                  </p>
+                </div>
+                <Link
+                  href={`/subjects/${id}/schemas?schema=${sc.id}`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  Ouvrir
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Aucun schéma.{" "}
+            <Link href={`/subjects/${id}/schemas`} className="text-primary hover:underline">
+              Refais un schéma de mémoire →
             </Link>
           </p>
         )}

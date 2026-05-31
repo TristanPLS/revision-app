@@ -161,7 +161,7 @@ function ReviewInner() {
             <p className="mb-2 text-center text-xs uppercase tracking-wide text-muted-foreground tabular">
               {pos + 1} / {total}
             </p>
-            <div className="flex min-h-64 flex-col justify-center rounded-xl border bg-card p-8 text-center">
+            <div className="flex min-h-64 flex-col justify-center rounded-xl border bg-card p-6 text-center sm:p-8">
               <p className="text-xl font-medium leading-relaxed">{current.front}</p>
               {revealed && (
                 <>

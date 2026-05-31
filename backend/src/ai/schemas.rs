@@ -82,6 +82,41 @@ pub fn feynman_schema() -> Value {
     })
 }
 
+/// `responseSchema` for concept-map generation (hierarchical nodes + edges).
+pub fn concept_map_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "nodes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string" },
+                        "label": { "type": "string" },
+                        "parent": { "type": "string" }
+                    },
+                    "required": ["id", "label"]
+                }
+            },
+            "edges": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "from": { "type": "string" },
+                        "to": { "type": "string" },
+                        "label": { "type": "string" }
+                    },
+                    "required": ["from", "to"]
+                }
+            }
+        },
+        "required": ["nodes"]
+    })
+}
+
 /// `responseSchema` for AI grading of a free-text answer.
 pub fn grade_schema() -> Value {
     json!({

@@ -483,3 +483,98 @@ pub struct CornellNoteDetail {
     pub created_at: DateTime<Utc>,
     pub cues: Vec<CornellCue>,
 }
+
+// ---------------------------------------------------------------------------
+// Concept maps, schemas, FSRS insights (Milestone 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct ConceptMap {
+    pub id: Uuid,
+    pub subject_id: Uuid,
+    pub block_id: Option<Uuid>,
+    pub title: String,
+    pub source: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct ConceptMapListItem {
+    pub id: Uuid,
+    pub title: String,
+    pub source: String,
+    pub created_at: DateTime<Utc>,
+    pub node_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct ConceptMapNode {
+    pub id: Uuid,
+    pub label: String,
+    pub parent_id: Option<Uuid>,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct ConceptMapEdge {
+    pub id: Uuid,
+    pub from_node: Uuid,
+    pub to_node: Uuid,
+    pub label: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ConceptMapDetail {
+    pub id: Uuid,
+    pub subject_id: Uuid,
+    pub title: String,
+    pub nodes: Vec<ConceptMapNode>,
+    pub edges: Vec<ConceptMapEdge>,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct SchemaAsset {
+    pub id: Uuid,
+    pub subject_id: Uuid,
+    pub block_id: Option<Uuid>,
+    pub title: String,
+    pub reference: Option<String>,
+    pub drawing: Option<serde_json::Value>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct SchemaListItem {
+    pub id: Uuid,
+    pub title: String,
+    pub created_at: DateTime<Utc>,
+    pub has_drawing: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateSchema {
+    pub title: String,
+    pub reference: Option<String>,
+    pub block_id: Option<Uuid>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateSchema {
+    pub title: Option<String>,
+    pub reference: Option<String>,
+    pub drawing: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FsrsInsights {
+    pub reviews_total: i64,
+    pub cards_reviewed: i64,
+    /// share of mature-review ratings that were NOT "Again" (1) — measured retention
+    pub measured_retention: Option<f32>,
+    /// model-predicted average retrievability at review time
+    pub predicted_retention: Option<f32>,
+    pub rating_counts: [i64; 4], // again, hard, good, easy
+    pub median_interval_days: Option<i32>,
+    pub target_retention: f32,
+    pub recommendation: String,
+}
