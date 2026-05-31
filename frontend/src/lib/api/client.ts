@@ -217,5 +217,35 @@ export const api = {
     close: (id: string) =>
       request(`/api/sessions/${id}/close`, closeSessionSchema, { method: "POST" }),
   },
+  maps: {
+    list: (subjectId: string) =>
+      request(`/api/subjects/${subjectId}/maps`, z.array(t.conceptMapListItemSchema)),
+    get: (id: string) => request(`/api/maps/${id}`, t.conceptMapDetailSchema),
+    remove: (id: string) => request(`/api/maps/${id}`, z.void(), { method: "DELETE" }),
+  },
+  schemas: {
+    list: (subjectId: string) =>
+      request(`/api/subjects/${subjectId}/schemas`, z.array(t.schemaListItemSchema)),
+    get: (id: string) => request(`/api/schemas/${id}`, t.schemaAssetSchema),
+    create: (
+      subjectId: string,
+      body: { title: string; reference?: string; block_id?: string }
+    ) =>
+      request(`/api/subjects/${subjectId}/schemas`, t.schemaAssetSchema, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (
+      id: string,
+      body: { title?: string; reference?: string; drawing?: unknown }
+    ) =>
+      request(`/api/schemas/${id}`, t.schemaAssetSchema, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) => request(`/api/schemas/${id}`, z.void(), { method: "DELETE" }),
+  },
+  fsrsInsights: (subjectId: string) =>
+    request(`/api/subjects/${subjectId}/fsrs-insights`, t.fsrsInsightsSchema),
   guardrails: () => request("/api/guardrails", t.guardrailsSchema),
 };

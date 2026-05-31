@@ -19,7 +19,7 @@ export function LeitnerBoard({
           <div
             key={i}
             className={cn(
-              "flex flex-col items-center gap-1 rounded-lg border p-3 text-center transition-colors",
+              "flex flex-col items-center gap-1 rounded-lg border p-2 text-center transition-colors sm:p-3",
               isHi ? "border-primary bg-primary/10" : "bg-card"
             )}
           >

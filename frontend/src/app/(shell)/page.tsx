@@ -44,7 +44,7 @@ export default function DashboardPage() {
     <div className="space-y-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Aujourd&apos;hui</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Aujourd&apos;hui</h1>
           <p className="text-muted-foreground">
             {totalDue > 0 ? (
               <>

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -110,6 +112,159 @@ async fn generate_and_insert(
     tx.commit().await?;
 
     Ok(json!({ "created": created, "skipped": skipped }))
+}
+
+// ---------------------------------------------------------------------------
+// Concept map generation (Milestone 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct GenMap {
+    title: Option<String>,
+    nodes: Vec<GenNode>,
+    #[serde(default)]
+    edges: Vec<GenEdge>,
+}
+
+#[derive(Deserialize)]
+struct GenNode {
+    id: String,
+    label: String,
+    parent: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct GenEdge {
+    from: String,
+    to: String,
+    label: Option<String>,
+}
+
+pub async fn run_concept_map(
+    pool: PgPool,
+    ai: AiClient,
+    job_id: Uuid,
+    subject_id: Uuid,
+    source: String,
+    block_id: Option<Uuid>,
+    block_title: Option<String>,
+    map_title: String,
+) {
+    let _ = sqlx::query("UPDATE generation_jobs SET status = 'running' WHERE id = $1")
+        .bind(job_id)
+        .execute(&pool)
+        .await;
+
+    let outcome =
+        generate_map_inner(&pool, &ai, subject_id, &source, block_id, block_title.as_deref(), &map_title)
+            .await;
+
+    match outcome {
+        Ok(result) => {
+            tracing::info!(%job_id, %result, "concept map generation done");
+            let _ = sqlx::query(
+                "UPDATE generation_jobs SET status='done', result=$2, finished_at=now() WHERE id=$1",
+            )
+            .bind(job_id)
+            .bind(result)
+            .execute(&pool)
+            .await;
+        }
+        Err(e) => {
+            tracing::error!(%job_id, error=%e, "concept map generation failed");
+            let _ = sqlx::query(
+                "UPDATE generation_jobs SET status='failed', error=$2, finished_at=now() WHERE id=$1",
+            )
+            .bind(job_id)
+            .bind(e.to_string())
+            .execute(&pool)
+            .await;
+        }
+    }
+}
+
+async fn generate_map_inner(
+    pool: &PgPool,
+    ai: &AiClient,
+    subject_id: Uuid,
+    source: &str,
+    block_id: Option<Uuid>,
+    block_title: Option<&str>,
+    map_title: &str,
+) -> AppResult<Value> {
+    let prompt = prompts::concept_map_prompt(source, block_title);
+    let raw = ai.generate_json(&prompt, schemas::concept_map_schema()).await?;
+    let parsed: GenMap = serde_json::from_str(&raw).map_err(|e| AppError::AiSchema(e.to_string()))?;
+
+    if parsed.nodes.is_empty() {
+        return Err(AppError::AiSchema("aucun nœud généré".into()));
+    }
+    let title = parsed
+        .title
+        .as_deref()
+        .filter(|t| !t.trim().is_empty())
+        .unwrap_or(map_title);
+
+    let mut tx = pool.begin().await?;
+    let map_id: Uuid = sqlx::query_scalar(
+        "INSERT INTO concept_maps (subject_id, block_id, title, source) \
+         VALUES ($1, $2, $3, 'ai') RETURNING id",
+    )
+    .bind(subject_id)
+    .bind(block_id)
+    .bind(title)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    // Pass 1: insert nodes, remember ai-id -> uuid.
+    let mut idmap: HashMap<String, Uuid> = HashMap::new();
+    for n in &parsed.nodes {
+        if n.label.trim().is_empty() {
+            continue;
+        }
+        let nid: Uuid =
+            sqlx::query_scalar("INSERT INTO concept_map_nodes (map_id, label) VALUES ($1, $2) RETURNING id")
+                .bind(map_id)
+                .bind(n.label.trim())
+                .fetch_one(&mut *tx)
+                .await?;
+        idmap.insert(n.id.clone(), nid);
+    }
+    // Pass 2: wire parents.
+    for n in &parsed.nodes {
+        if let Some(p) = n.parent.as_deref().filter(|p| !p.trim().is_empty()) {
+            if let (Some(&child), Some(&parent)) = (idmap.get(&n.id), idmap.get(p)) {
+                if child != parent {
+                    sqlx::query("UPDATE concept_map_nodes SET parent_id = $1 WHERE id = $2")
+                        .bind(parent)
+                        .bind(child)
+                        .execute(&mut *tx)
+                        .await?;
+                }
+            }
+        }
+    }
+    // Edges.
+    let mut edges = 0i64;
+    for e in &parsed.edges {
+        if let (Some(&a), Some(&b)) = (idmap.get(&e.from), idmap.get(&e.to)) {
+            if a != b {
+                sqlx::query(
+                    "INSERT INTO concept_map_edges (map_id, from_node, to_node, label) VALUES ($1, $2, $3, $4)",
+                )
+                .bind(map_id)
+                .bind(a)
+                .bind(b)
+                .bind(e.label.as_deref())
+                .execute(&mut *tx)
+                .await?;
+                edges += 1;
+            }
+        }
+    }
+    tx.commit().await?;
+
+    Ok(json!({ "map_id": map_id, "nodes": idmap.len(), "edges": edges }))
 }
 
 // ---------------------------------------------------------------------------

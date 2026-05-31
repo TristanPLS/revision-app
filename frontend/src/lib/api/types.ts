@@ -263,3 +263,69 @@ export const cornellNoteDetailSchema = z.object({
   cues: z.array(cornellCueSchema),
 });
 export type CornellNoteDetail = z.infer<typeof cornellNoteDetailSchema>;
+
+// ---- Concept maps + schemas + FSRS insights (Milestone 4) ----
+export const conceptMapListItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  source: z.string(),
+  created_at: z.string(),
+  node_count: z.number(),
+});
+export type ConceptMapListItem = z.infer<typeof conceptMapListItemSchema>;
+
+export const conceptMapNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  parent_id: z.string().nullable(),
+});
+export type ConceptMapNode = z.infer<typeof conceptMapNodeSchema>;
+
+export const conceptMapEdgeSchema = z.object({
+  id: z.string(),
+  from_node: z.string(),
+  to_node: z.string(),
+  label: z.string().nullable(),
+});
+export type ConceptMapEdge = z.infer<typeof conceptMapEdgeSchema>;
+
+export const conceptMapDetailSchema = z.object({
+  id: z.string(),
+  subject_id: z.string(),
+  title: z.string(),
+  nodes: z.array(conceptMapNodeSchema),
+  edges: z.array(conceptMapEdgeSchema),
+});
+export type ConceptMapDetail = z.infer<typeof conceptMapDetailSchema>;
+
+export const schemaListItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  created_at: z.string(),
+  has_drawing: z.boolean(),
+});
+export type SchemaListItem = z.infer<typeof schemaListItemSchema>;
+
+export const schemaAssetSchema = z.object({
+  id: z.string(),
+  subject_id: z.string(),
+  block_id: z.string().nullable(),
+  title: z.string(),
+  reference: z.string().nullable(),
+  drawing: z.unknown().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export type SchemaAsset = z.infer<typeof schemaAssetSchema>;
+
+export const fsrsInsightsSchema = z.object({
+  reviews_total: z.number(),
+  cards_reviewed: z.number(),
+  measured_retention: z.number().nullable(),
+  predicted_retention: z.number().nullable(),
+  rating_counts: z.array(z.number()).length(4),
+  median_interval_days: z.number().nullable(),
+  target_retention: z.number(),
+  recommendation: z.string(),
+});
+export type FsrsInsights = z.infer<typeof fsrsInsightsSchema>;

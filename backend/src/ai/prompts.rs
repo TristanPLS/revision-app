@@ -69,6 +69,26 @@ pub fn feynman_prompt(source: &str, count: i32, block_title: Option<&str>) -> St
     )
 }
 
+/// Prompt for a hierarchical concept map.
+pub fn concept_map_prompt(source: &str, block_title: Option<&str>) -> String {
+    let scope = match block_title {
+        Some(t) => format!(" Concentre-toi sur le thème : « {t} »."),
+        None => String::new(),
+    };
+    format!(
+        "Tu es un pédagogue. À partir du COURS ci-dessous, construis une CARTE CONCEPTUELLE hiérarchique.\n\n\
+         RÈGLES :\n\
+         - 'title' : titre court de la carte.\n\
+         - 'nodes' : 8 à 15 concepts. Chaque nœud a un 'id' court unique (ex. \"n1\"), un 'label' bref, \
+           et 'parent' = l'id du concept parent (omis ou vide pour LA racine unique).\n\
+         - 'edges' : liens transversaux entre concepts ('from'/'to' = ids de nœuds, 'label' = nature du lien, ex. « entraîne »).\n\
+         - Une seule racine. Langue : celle du COURS. Réponds UNIQUEMENT en JSON conforme au schéma.{scope}\n\n\
+         COURS :\n\"\"\"\n{src}\n\"\"\"",
+        scope = scope,
+        src = truncate(source, 16000),
+    )
+}
+
 /// Prompt to grade a free-text answer against a rubric, out of `max_points`.
 pub fn grade_prompt(question: &str, rubric: Option<&str>, response: &str, max_points: i32) -> String {
     let rub = rubric

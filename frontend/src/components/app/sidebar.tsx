@@ -54,7 +54,7 @@ export function Sidebar() {
 
 export function MobileHeader() {
   return (
-    <header className="flex items-center justify-between border-b bg-card/60 px-4 py-3 md:hidden">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-card/80 px-4 py-3 backdrop-blur md:hidden">
       <Brand />
       <ThemeToggle />
     </header>

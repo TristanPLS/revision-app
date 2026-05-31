@@ -8,14 +8,136 @@ use uuid::Uuid;
 
 use crate::{
     error::AppResult,
-    models::{BlockMastery, Guardrails, SubjectStats},
+    models::{BlockMastery, FsrsInsights, Guardrails, SubjectStats},
     state::AppState,
 };
 
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/subjects/{id}/stats", get(subject_stats))
+        .route("/subjects/{id}/fsrs-insights", get(fsrs_insights))
         .route("/guardrails", get(guardrails))
+}
+
+// FSRS forgetting-curve constants (match srs.rs).
+const FACTOR: f32 = 19.0 / 81.0;
+const DECAY: f32 = -0.5;
+
+#[derive(sqlx::FromRow)]
+struct ReviewRow {
+    flashcard_id: Uuid,
+    rating: i16,
+    elapsed_days: i32,
+    stability_after: Option<f32>,
+    scheduled_days: i32,
+}
+
+/// Data-driven FSRS insights from the real review log: measured retention,
+/// model calibration, rating distribution, and a retention recommendation.
+/// (Full 19-weight training is deferred — it needs a training framework and
+/// far more review history.)
+async fn fsrs_insights(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<FsrsInsights>> {
+    let rows = sqlx::query_as::<_, ReviewRow>(
+        "SELECT r.flashcard_id, r.rating, r.elapsed_days, r.stability_after, r.scheduled_days \
+         FROM reviews r JOIN flashcards f ON f.id = r.flashcard_id \
+         WHERE f.subject_id = $1 ORDER BY r.flashcard_id, r.reviewed_at",
+    )
+    .bind(subject_id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let reviews_total = rows.len() as i64;
+    let mut rating_counts = [0i64; 4];
+    let mut intervals: Vec<i32> = Vec::new();
+    let mut cards = std::collections::HashSet::new();
+
+    let mut prev_card: Option<Uuid> = None;
+    let mut prev_stab: Option<f32> = None;
+    let mut mature = 0i64;
+    let mut recalled = 0i64;
+    let mut pred_sum = 0.0f64;
+    let mut pred_n = 0i64;
+
+    for r in &rows {
+        cards.insert(r.flashcard_id);
+        if (1..=4).contains(&r.rating) {
+            rating_counts[(r.rating - 1) as usize] += 1;
+        }
+        intervals.push(r.scheduled_days);
+
+        let same_card = prev_card == Some(r.flashcard_id);
+        if same_card && r.elapsed_days >= 1 {
+            mature += 1;
+            if r.rating >= 2 {
+                recalled += 1;
+            }
+            if let Some(sb) = prev_stab {
+                if sb > 0.0 {
+                    let rr = (1.0 + FACTOR * r.elapsed_days as f32 / sb).powf(DECAY);
+                    pred_sum += rr as f64;
+                    pred_n += 1;
+                }
+            }
+        }
+        prev_card = Some(r.flashcard_id);
+        prev_stab = r.stability_after;
+    }
+
+    let measured = if mature > 0 {
+        Some(recalled as f32 / mature as f32)
+    } else {
+        None
+    };
+    let predicted = if pred_n > 0 {
+        Some((pred_sum / pred_n as f64) as f32)
+    } else {
+        None
+    };
+    intervals.sort_unstable();
+    let median_interval_days = intervals.get(intervals.len() / 2).copied();
+    let target = s.cfg.fsrs_retention;
+
+    Ok(Json(FsrsInsights {
+        reviews_total,
+        cards_reviewed: cards.len() as i64,
+        measured_retention: measured,
+        predicted_retention: predicted,
+        rating_counts,
+        median_interval_days,
+        target_retention: target,
+        recommendation: build_reco(reviews_total, measured, target),
+    }))
+}
+
+fn build_reco(total: i64, measured: Option<f32>, target: f32) -> String {
+    if total < 30 {
+        return format!(
+            "Encore peu de révisions ({total}). Vise ~100 révisions pour une optimisation fiable des paramètres."
+        );
+    }
+    match measured {
+        None => "Pas encore assez de révisions espacées pour mesurer ta rétention.".to_string(),
+        Some(m) => {
+            let mp = (m * 100.0).round();
+            let tp = (target * 100.0).round();
+            if m > target + 0.05 {
+                format!(
+                    "Rétention mesurée {mp}% > cible {tp}%. Tu retiens mieux que prévu : tu peux allonger les intervalles (baisser FSRS_RETENTION vers ~{:.2}).",
+                    (m - 0.03).max(0.80)
+                )
+            } else if m < target - 0.05 {
+                format!(
+                    "Rétention mesurée {mp}% < cible {tp}%. Tu oublies plus que prévu : raccourcis les intervalles (monte FSRS_RETENTION vers ~{:.2}) ou révise plus régulièrement.",
+                    (target + 0.03).min(0.95)
+                )
+            } else {
+                format!("Bien calibré : rétention mesurée {mp}% ≈ cible {tp}%.")
+            }
+        }
+    }
 }
 
 #[derive(sqlx::FromRow)]
