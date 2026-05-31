@@ -1,0 +1,69 @@
+name: revision-app
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Not published to the host in prod — only the app needs it.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    networks: [revision_net]
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      BACKEND_PORT: "8080"
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      AI_PROVIDER: ${AI_PROVIDER}
+      AI_MODEL: ${AI_MODEL}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL}
+      FSRS_RETENTION: ${FSRS_RETENTION}
+      RUST_LOG: ${RUST_LOG:-info}
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 25s
+      retries: 3
+    networks: [revision_net]
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # consumed by next.config rewrites to reach the backend over the docker net
+      BACKEND_INTERNAL_URL: http://backend:8080
+      PORT: "3000"
+      NODE_ENV: production
+    # ONLY the frontend is published, bound to localhost; `tailscale serve`
+    # bridges it to the tailnet.
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT}:3000"
+    networks: [revision_net]
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  revision_net:
+    driver: bridge
