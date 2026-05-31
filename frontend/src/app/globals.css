@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Design tokens — built to Impeccable standards:
+  - OKLCH for perceptual uniformity
+  - warm off-white / desaturated charcoal (never pure #fff / #000)
+  - ONE confident primary hue (verdant) + neutrals
+  - four intentional rating colors (Again/Hard/Good/Easy), no rainbow
+  - no gradients, no glows, no neon
+*/
+:root {
+  --background: oklch(0.992 0.004 95);
+  --foreground: oklch(0.22 0.012 260);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.012 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.012 260);
+
+  --primary: oklch(0.55 0.12 168);
+  --primary-foreground: oklch(0.99 0.01 95);
+
+  --secondary: oklch(0.965 0.005 95);
+  --secondary-foreground: oklch(0.25 0.012 260);
+
+  --muted: oklch(0.965 0.005 95);
+  --muted-foreground: oklch(0.50 0.012 260);
+
+  --accent: oklch(0.95 0.025 168);
+  --accent-foreground: oklch(0.27 0.03 168);
+
+  --destructive: oklch(0.58 0.17 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.91 0.005 95);
+  --input: oklch(0.91 0.005 95);
+  --ring: oklch(0.55 0.12 168);
+
+  --radius: 0.625rem;
+
+  /* FSRS rating semantics */
+  --rate-again: oklch(0.58 0.17 25);
+  --rate-hard: oklch(0.70 0.13 65);
+  --rate-good: oklch(0.60 0.12 150);
+  --rate-easy: oklch(0.60 0.10 240);
+  --rate-foreground: oklch(0.99 0.01 95);
+}
+
+.dark {
+  --background: oklch(0.20 0.012 260);
+  --foreground: oklch(0.94 0.004 95);
+
+  --card: oklch(0.235 0.012 260);
+  --card-foreground: oklch(0.94 0.004 95);
+  --popover: oklch(0.235 0.012 260);
+  --popover-foreground: oklch(0.94 0.004 95);
+
+  --primary: oklch(0.66 0.12 168);
+  --primary-foreground: oklch(0.18 0.02 260);
+
+  --secondary: oklch(0.27 0.012 260);
+  --secondary-foreground: oklch(0.94 0.004 95);
+
+  --muted: oklch(0.27 0.012 260);
+  --muted-foreground: oklch(0.70 0.012 260);
+
+  --accent: oklch(0.30 0.025 168);
+  --accent-foreground: oklch(0.92 0.025 168);
+
+  --destructive: oklch(0.62 0.17 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.30 0.012 260);
+  --input: oklch(0.30 0.012 260);
+  --ring: oklch(0.66 0.12 168);
+
+  --rate-again: oklch(0.62 0.17 25);
+  --rate-hard: oklch(0.74 0.13 65);
+  --rate-good: oklch(0.66 0.12 150);
+  --rate-easy: oklch(0.66 0.10 240);
+  --rate-foreground: oklch(0.16 0.02 260);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-rate-again: var(--rate-again);
+  --color-rate-hard: var(--rate-hard);
+  --color-rate-good: var(--rate-good);
+  --color-rate-easy: var(--rate-easy);
+  --color-rate-foreground: var(--rate-foreground);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* visible focus ring everywhere (accessibility, Impeccable) */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* dense numeric data (this domain is full of percentages) */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}

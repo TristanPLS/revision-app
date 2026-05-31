@@ -1,0 +1,42 @@
+[package]
+name = "revision-backend"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "revision-backend"
+path = "src/main.rs"
+
+[dependencies]
+# --- Web ---
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# --- Base de données (sqlx 0.8 : compatible rustc 1.92 ; 0.9 exige 1.94) ---
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio", "tls-rustls", "postgres",
+    "uuid", "chrono", "json", "macros", "migrate",
+] }
+
+# --- Sérialisation ---
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# --- Client HTTP (Gemini) — rustls pour éviter OpenSSL ---
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# --- Commun ---
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15"
+thiserror = "2"
+anyhow = "1"
+
+# --- Observabilité ---
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+opt-level = 2
