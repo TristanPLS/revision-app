@@ -10,7 +10,10 @@ use uuid::Uuid;
 use crate::{
     ai,
     error::{AppError, AppResult},
-    models::{CreateSource, GenerateRequest, GenerationJob, JobKind, SourceDocument},
+    models::{
+        CreateSource, GenerateAllRequest, GenerateRequest, GenerationJob, JobKind, SourceDocument,
+        StudyPlan,
+    },
     state::AppState,
 };
 
@@ -19,6 +22,8 @@ pub fn routes() -> Router<AppState> {
         .route("/subjects/{id}/sources", get(list).post(create))
         .route("/sources/{id}", get(get_one).delete(delete_one))
         .route("/sources/{id}/generate", post(generate))
+        .route("/sources/{id}/plan", post(plan))
+        .route("/sources/{id}/generate-all", post(generate_all))
         .route("/jobs/{id}", get(job_status))
         .route("/subjects/{id}/jobs", get(list_jobs))
 }
@@ -97,11 +102,14 @@ async fn generate(
     }
     if !matches!(
         req.kind,
-        JobKind::Flashcards | JobKind::Exam | JobKind::Feynman | JobKind::ConceptMap
+        JobKind::Flashcards
+            | JobKind::Exam
+            | JobKind::Feynman
+            | JobKind::ConceptMap
+            | JobKind::Cornell
+            | JobKind::Schema
     ) {
-        return Err(AppError::BadRequest(
-            "kind non supporté".into(),
-        ));
+        return Err(AppError::BadRequest("kind non supporté".into()));
     }
 
     let src = sqlx::query_as::<_, SourceDocument>(&format!(
@@ -148,6 +156,7 @@ async fn generate(
         .title
         .clone()
         .unwrap_or_else(|| "Carte conceptuelle".to_string());
+    let cornell_title = req.title.clone().unwrap_or_else(|| "Fiche Cornell".to_string());
     tokio::spawn(async move {
         match kind {
             JobKind::Exam => {
@@ -169,6 +178,19 @@ async fn generate(
                 )
                 .await;
             }
+            JobKind::Cornell => {
+                ai::generate::run_cornell(
+                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                    cornell_title,
+                )
+                .await;
+            }
+            JobKind::Schema => {
+                ai::generate::run_schemas(
+                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                )
+                .await;
+            }
             _ => {
                 ai::generate::run_flashcards(
                     pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
@@ -176,6 +198,80 @@ async fn generate(
                 .await;
             }
         }
+    });
+
+    Ok(Json(json!({ "job_id": job_id, "status": "pending" })))
+}
+
+/// Planning pass: analyse the source and return a proposed (editable) study
+/// plan — block breakdown + a quantity for each support, sized by the AI.
+async fn plan(State(s): State<AppState>, Path(source_id): Path<Uuid>) -> AppResult<Json<StudyPlan>> {
+    if !s.ai.is_configured() {
+        return Err(AppError::AiNotConfigured);
+    }
+    let src = sqlx::query_as::<_, SourceDocument>(&format!(
+        "SELECT {SOURCE_COLS} FROM source_documents WHERE id = $1"
+    ))
+    .bind(source_id)
+    .fetch_optional(&s.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let plan = ai::generate::plan(&s.ai, &src.content).await?;
+    Ok(Json(plan))
+}
+
+/// Trigger a bundle generation (all supports at once) from a (possibly edited)
+/// study plan. Creates one `bundle` job, spawns the work, returns the job id.
+async fn generate_all(
+    State(s): State<AppState>,
+    Path(source_id): Path<Uuid>,
+    Json(req): Json<GenerateAllRequest>,
+) -> AppResult<Json<Value>> {
+    if !s.ai.is_configured() {
+        return Err(AppError::AiNotConfigured);
+    }
+    let src = sqlx::query_as::<_, SourceDocument>(&format!(
+        "SELECT {SOURCE_COLS} FROM source_documents WHERE id = $1"
+    ))
+    .bind(source_id)
+    .fetch_optional(&s.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    // Re-clamp the (user-edited) plan to safe bounds; 0 means "skip this support".
+    let plan = StudyPlan {
+        blocks: req.plan.blocks.into_iter().take(12).collect(),
+        flashcards: req.plan.flashcards.clamp(0, 50),
+        exam_questions: req.plan.exam_questions.clamp(0, 50),
+        feynman_concepts: req.plan.feynman_concepts.clamp(0, 30),
+        map_nodes: req.plan.map_nodes.clamp(0, 20),
+        cornell_cues: req.plan.cornell_cues.clamp(0, 20),
+        schemas: req.plan.schemas.clamp(0, 8),
+    };
+
+    let job_id: Uuid = sqlx::query_scalar(
+        "INSERT INTO generation_jobs (subject_id, source_id, kind, status, model) \
+         VALUES ($1, $2, $3, 'pending', $4) RETURNING id",
+    )
+    .bind(src.subject_id)
+    .bind(source_id)
+    .bind(JobKind::Bundle)
+    .bind(s.ai.model())
+    .fetch_one(&s.pool)
+    .await?;
+
+    let pool = s.pool.clone();
+    let ai_client = s.ai.clone();
+    let subject_id = src.subject_id;
+    let content = src.content.clone();
+    let exam_title = req.title.clone().unwrap_or_else(|| "Examen blanc".to_string());
+    let map_title = req.title.unwrap_or_else(|| "Carte conceptuelle".to_string());
+    tokio::spawn(async move {
+        ai::generate::run_bundle(
+            pool, ai_client, job_id, subject_id, content, plan, exam_title, map_title,
+        )
+        .await;
     });
 
     Ok(Json(json!({ "job_id": job_id, "status": "pending" })))
