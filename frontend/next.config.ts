@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   // lockfile in the home dir otherwise confuses inference).
   outputFileTracingRoot: __dirname,
   turbopack: { root: __dirname },
+  // Hide the Next.js dev-tools indicator (the little logo bottom-left in dev).
+  devIndicators: false,
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${backend}/api/:path*` }];
   },

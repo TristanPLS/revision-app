@@ -318,6 +318,25 @@ export const schemaAssetSchema = z.object({
 });
 export type SchemaAsset = z.infer<typeof schemaAssetSchema>;
 
+// ---- Study plan ("Tout générer d'un coup") ----
+export const planBlockSchema = z.object({
+  title: z.string(),
+  code: z.string().nullable(),
+  summary: z.string().nullable(),
+});
+export type PlanBlock = z.infer<typeof planBlockSchema>;
+
+export const studyPlanSchema = z.object({
+  blocks: z.array(planBlockSchema),
+  flashcards: z.number(),
+  exam_questions: z.number(),
+  feynman_concepts: z.number(),
+  map_nodes: z.number(),
+  cornell_cues: z.number(),
+  schemas: z.number(),
+});
+export type StudyPlan = z.infer<typeof studyPlanSchema>;
+
 export const fsrsInsightsSchema = z.object({
   reviews_total: z.number(),
   cards_reviewed: z.number(),
