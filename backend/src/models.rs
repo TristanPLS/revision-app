@@ -38,6 +38,10 @@ pub enum JobKind {
     Exam,
     Feynman,
     ConceptMap,
+    Cornell,
+    Schema,
+    /// "Tout générer d'un coup" : blocs + flashcards + examen + Feynman + carte.
+    Bundle,
 }
 
 // ---------------------------------------------------------------------------
@@ -161,6 +165,42 @@ pub struct GenerateRequest {
     pub kind: JobKind,
     pub count: Option<i32>,
     pub block_id: Option<Uuid>,
+    pub title: Option<String>,
+}
+
+/// One block proposed by the AI planning pass (or edited by the user).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlanBlock {
+    pub title: String,
+    #[serde(default)]
+    pub code: Option<String>,
+    #[serde(default)]
+    pub summary: Option<String>,
+}
+
+/// Study plan returned by `POST /sources/{id}/plan` and sent back (possibly
+/// edited) to `POST /sources/{id}/generate-all`. The AI proposes the block
+/// breakdown and the quantity of each support, sized to the course.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StudyPlan {
+    #[serde(default)]
+    pub blocks: Vec<PlanBlock>,
+    pub flashcards: i32,
+    pub exam_questions: i32,
+    pub feynman_concepts: i32,
+    pub map_nodes: i32,
+    /// Number of recall questions in the auto-generated Cornell note (0 = none).
+    #[serde(default)]
+    pub cornell_cues: i32,
+    /// Number of schema stubs to draw (dual coding), with an AI-suggested
+    /// reference each (0 = none).
+    #[serde(default)]
+    pub schemas: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GenerateAllRequest {
+    pub plan: StudyPlan,
     pub title: Option<String>,
 }
 

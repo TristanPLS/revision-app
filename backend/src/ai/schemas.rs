@@ -72,13 +72,96 @@ pub fn feynman_schema() -> Value {
                     "type": "object",
                     "properties": {
                         "title": { "type": "string" },
-                        "hint": { "type": "string" }
+                        "hint": { "type": "string" },
+                        "block_hint": { "type": "string" }
                     },
                     "required": ["title"]
                 }
             }
         },
         "required": ["concepts"]
+    })
+}
+
+/// `responseSchema` for the planning pass: a block breakdown + a proposed
+/// quantity for each support, sized to the course. The model decides the
+/// numbers; the user can adjust them before generating.
+pub fn plan_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "blocks": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string" },
+                        "code": { "type": "string" },
+                        "summary": { "type": "string" }
+                    },
+                    "required": ["title"]
+                }
+            },
+            "flashcards": { "type": "integer" },
+            "exam_questions": { "type": "integer" },
+            "feynman_concepts": { "type": "integer" },
+            "map_nodes": { "type": "integer" },
+            "cornell_cues": { "type": "integer" },
+            "schemas": { "type": "integer" }
+        },
+        "required": [
+            "blocks", "flashcards", "exam_questions", "feynman_concepts", "map_nodes",
+            "cornell_cues", "schemas"
+        ]
+    })
+}
+
+/// `responseSchema` for Cornell note generation: structured body + summary +
+/// margin recall questions (cues).
+pub fn cornell_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "summary": { "type": "string" },
+            "cues": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "question": { "type": "string" },
+                        "answer": { "type": "string" }
+                    },
+                    "required": ["question"]
+                }
+            }
+        },
+        "required": ["title", "body", "cues"]
+    })
+}
+
+/// `responseSchema` for schema-stub generation (dual coding): each item is a
+/// diagram the learner should draw, with a title and a reference of what it must
+/// contain. The drawing itself is left to the learner (active encoding).
+pub fn schemas_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "schemas": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string" },
+                        "reference": { "type": "string" },
+                        "block_hint": { "type": "string" }
+                    },
+                    "required": ["title", "reference"]
+                }
+            }
+        },
+        "required": ["schemas"]
     })
 }
 

@@ -134,6 +134,15 @@ export const api = {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    // Planning pass: the AI proposes an (editable) study plan for the whole course.
+    plan: (sourceId: string) =>
+      request(`/api/sources/${sourceId}/plan`, t.studyPlanSchema, { method: "POST" }),
+    // Bundle generation: all supports at once from a (possibly edited) plan.
+    generateAll: (sourceId: string, body: { plan: t.StudyPlan; title?: string }) =>
+      request(`/api/sources/${sourceId}/generate-all`, generateAckSchema, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
   exams: {
     list: (subjectId: string) =>
