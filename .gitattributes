@@ -1,0 +1,5 @@
+# Forcer les fins de ligne LF sur les fichiers exécutés dans des conteneurs
+# Linux. Sans ça, un checkout Windows en CRLF injecterait des \r qui
+# corromperaient les données COPY du seed une fois redirigé dans psql.
+*.sql text eol=lf
+*.sh  text eol=lf
