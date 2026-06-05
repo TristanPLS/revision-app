@@ -126,7 +126,9 @@ async fn generate_and_insert(
     blocks: &[BlockRef],
 ) -> AppResult<Value> {
     let prompt = prompts::flashcards_prompt(source, count, block_title, &block_titles(blocks));
-    let raw = ai.generate_json(&prompt, schemas::flashcards_schema()).await?;
+    let raw = ai
+        .generate_json(&prompt, schemas::flashcards_schema())
+        .await?;
     let parsed: GenFlashcards =
         serde_json::from_str(&raw).map_err(|e| AppError::AiSchema(e.to_string()))?;
 
@@ -247,8 +249,11 @@ async fn generate_map_inner(
     target_nodes: Option<i32>,
 ) -> AppResult<Value> {
     let prompt = prompts::concept_map_prompt(source, block_title, target_nodes);
-    let raw = ai.generate_json(&prompt, schemas::concept_map_schema()).await?;
-    let parsed: GenMap = serde_json::from_str(&raw).map_err(|e| AppError::AiSchema(e.to_string()))?;
+    let raw = ai
+        .generate_json(&prompt, schemas::concept_map_schema())
+        .await?;
+    let parsed: GenMap =
+        serde_json::from_str(&raw).map_err(|e| AppError::AiSchema(e.to_string()))?;
 
     if parsed.nodes.is_empty() {
         return Err(AppError::AiSchema("aucun nœud généré".into()));
@@ -276,12 +281,13 @@ async fn generate_map_inner(
         if n.label.trim().is_empty() {
             continue;
         }
-        let nid: Uuid =
-            sqlx::query_scalar("INSERT INTO concept_map_nodes (map_id, label) VALUES ($1, $2) RETURNING id")
-                .bind(map_id)
-                .bind(n.label.trim())
-                .fetch_one(&mut *tx)
-                .await?;
+        let nid: Uuid = sqlx::query_scalar(
+            "INSERT INTO concept_map_nodes (map_id, label) VALUES ($1, $2) RETURNING id",
+        )
+        .bind(map_id)
+        .bind(n.label.trim())
+        .fetch_one(&mut *tx)
+        .await?;
         idmap.insert(n.id.clone(), nid);
     }
     // Pass 2: wire parents.
@@ -747,7 +753,13 @@ async fn generate_cornell_inner(
     .bind(block_id)
     .bind(title)
     .bind(body)
-    .bind(parsed.summary.as_deref().map(str::trim).filter(|s| !s.is_empty()))
+    .bind(
+        parsed
+            .summary
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty()),
+    )
     .fetch_one(&mut *tx)
     .await?;
 
@@ -871,7 +883,12 @@ async fn generate_schemas_inner(
         .bind(subject_id)
         .bind(bid)
         .bind(title)
-        .bind(sc.reference.as_deref().map(str::trim).filter(|r| !r.is_empty()))
+        .bind(
+            sc.reference
+                .as_deref()
+                .map(str::trim)
+                .filter(|r| !r.is_empty()),
+        )
         .execute(&mut *tx)
         .await?;
         created += 1;
@@ -926,8 +943,14 @@ pub async fn plan(ai: &AiClient, source: &str) -> AppResult<StudyPlan> {
             }
             Some(crate::models::PlanBlock {
                 title,
-                code: b.code.map(|c| c.trim().to_string()).filter(|c| !c.is_empty()),
-                summary: b.summary.map(|s| s.trim().to_string()).filter(|s| !s.is_empty()),
+                code: b
+                    .code
+                    .map(|c| c.trim().to_string())
+                    .filter(|c| !c.is_empty()),
+                summary: b
+                    .summary
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty()),
             })
         })
         .take(12)
@@ -965,8 +988,16 @@ pub async fn run_bundle(
         .execute(&pool)
         .await;
 
-    let outcome =
-        run_bundle_inner(&pool, &ai, subject_id, &source, plan, &exam_title, &map_title).await;
+    let outcome = run_bundle_inner(
+        &pool,
+        &ai,
+        subject_id,
+        &source,
+        plan,
+        &exam_title,
+        &map_title,
+    )
+    .await;
 
     match outcome {
         Ok(result) => {
@@ -1017,7 +1048,12 @@ async fn run_bundle_inner(
         .bind(subject_id)
         .bind(b.code.as_deref().map(str::trim).filter(|c| !c.is_empty()))
         .bind(title)
-        .bind(b.summary.as_deref().map(str::trim).filter(|s| !s.is_empty()))
+        .bind(
+            b.summary
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty()),
+        )
         .bind(i as i32)
         .fetch_one(pool)
         .await?;
@@ -1052,46 +1088,99 @@ async fn run_bundle_inner(
     if plan.flashcards > 0 {
         step!(
             "flashcards",
-            generate_and_insert(pool, ai, subject_id, source, plan.flashcards, None, None, &blocks)
+            generate_and_insert(
+                pool,
+                ai,
+                subject_id,
+                source,
+                plan.flashcards,
+                None,
+                None,
+                &blocks
+            )
         );
     }
     if plan.exam_questions > 0 {
         step!(
             "exam",
             generate_exam_inner(
-                pool, ai, subject_id, source, plan.exam_questions, None, None, exam_title, &blocks
+                pool,
+                ai,
+                subject_id,
+                source,
+                plan.exam_questions,
+                None,
+                None,
+                exam_title,
+                &blocks
             )
         );
     }
     if plan.feynman_concepts > 0 {
         step!(
             "feynman",
-            generate_feynman_inner(pool, ai, subject_id, source, plan.feynman_concepts, None, None, &blocks)
+            generate_feynman_inner(
+                pool,
+                ai,
+                subject_id,
+                source,
+                plan.feynman_concepts,
+                None,
+                None,
+                &blocks
+            )
         );
     }
     if plan.map_nodes > 0 {
         step!(
             "concept_map",
-            generate_map_inner(pool, ai, subject_id, source, None, None, map_title, Some(plan.map_nodes))
+            generate_map_inner(
+                pool,
+                ai,
+                subject_id,
+                source,
+                None,
+                None,
+                map_title,
+                Some(plan.map_nodes)
+            )
         );
     }
     if plan.cornell_cues > 0 {
         step!(
             "cornell",
             generate_cornell_inner(
-                pool, ai, subject_id, source, plan.cornell_cues, None, None, "Fiche Cornell"
+                pool,
+                ai,
+                subject_id,
+                source,
+                plan.cornell_cues,
+                None,
+                None,
+                "Fiche Cornell"
             )
         );
     }
     if plan.schemas > 0 {
         step!(
             "schemas",
-            generate_schemas_inner(pool, ai, subject_id, source, plan.schemas, None, None, &blocks)
+            generate_schemas_inner(
+                pool,
+                ai,
+                subject_id,
+                source,
+                plan.schemas,
+                None,
+                None,
+                &blocks
+            )
         );
     }
 
     if !any_ok {
-        return Err(AppError::AiSchema("aucun support n'a pu être généré".into()));
+        return Err(AppError::AiSchema(
+            "aucun support n'a pu être généré".into(),
+        ));
     }
     Ok(Value::Object(result))
 }

@@ -19,7 +19,7 @@ pub enum AppError {
     Conflict(String),
     #[error("erreur base de données")]
     Database(#[from] sqlx::Error),
-    #[error("IA non configurée (GEMINI_API_KEY absente)")]
+    #[error("IA non configurée — ajoute ta clé API dans Réglages")]
     AiNotConfigured,
     #[error("fournisseur IA {0}: {1}")]
     AiProvider(u16, String),
@@ -44,10 +44,14 @@ impl IntoResponse for AppError {
             }
             AppError::Conflict(m) => (StatusCode::CONFLICT, m.clone()),
             AppError::AiNotConfigured => (StatusCode::SERVICE_UNAVAILABLE, self.to_string()),
-            AppError::AiProvider(..) | AppError::AiEmpty | AppError::AiSchema(_) => {
-                (StatusCode::BAD_GATEWAY, "échec de génération IA".to_string())
-            }
-            _ => (StatusCode::INTERNAL_SERVER_ERROR, "erreur interne".to_string()),
+            AppError::AiProvider(..) | AppError::AiEmpty | AppError::AiSchema(_) => (
+                StatusCode::BAD_GATEWAY,
+                "échec de génération IA".to_string(),
+            ),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "erreur interne".to_string(),
+            ),
         };
 
         if status.is_server_error() || status == StatusCode::BAD_GATEWAY {

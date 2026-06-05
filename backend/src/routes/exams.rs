@@ -27,7 +27,10 @@ pub fn routes() -> Router<AppState> {
         .route("/attempts/{id}", get(results))
 }
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<ExamListItem>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<ExamListItem>>> {
     let rows = sqlx::query_as::<_, ExamListItem>(
         "SELECT e.id, e.title, e.time_limit_s, e.created_at, \
            (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) AS question_count, \
@@ -79,7 +82,10 @@ async fn delete_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResul
     Ok(StatusCode::NO_CONTENT)
 }
 
-async fn start_attempt(State(s): State<AppState>, Path(exam_id): Path<Uuid>) -> AppResult<Json<AttemptStart>> {
+async fn start_attempt(
+    State(s): State<AppState>,
+    Path(exam_id): Path<Uuid>,
+) -> AppResult<Json<AttemptStart>> {
     let time_limit_s: Option<i32> =
         sqlx::query_scalar("SELECT time_limit_s FROM exams WHERE id = $1")
             .bind(exam_id)
@@ -162,7 +168,11 @@ async fn submit(
                         .as_deref()
                         .map(|k| k.trim().eq_ignore_ascii_case(r.trim()))
                         .unwrap_or(false);
-                    (if correct { q.points as f32 } else { 0.0 }, Some(correct), None)
+                    (
+                        if correct { q.points as f32 } else { 0.0 },
+                        Some(correct),
+                        None,
+                    )
                 }
             }
         };
@@ -198,7 +208,10 @@ async fn submit(
     Ok(Json(build_result(&s, attempt_id).await?))
 }
 
-async fn results(State(s): State<AppState>, Path(attempt_id): Path<Uuid>) -> AppResult<Json<AttemptResult>> {
+async fn results(
+    State(s): State<AppState>,
+    Path(attempt_id): Path<Uuid>,
+) -> AppResult<Json<AttemptResult>> {
     Ok(Json(build_result(&s, attempt_id).await?))
 }
 
@@ -232,7 +245,9 @@ async fn build_result(s: &AppState, attempt_id: Uuid) -> AppResult<AttemptResult
         let entry = agg.entry(it.block_id).or_insert_with(|| {
             order.push(it.block_id);
             (
-                it.block_title.clone().unwrap_or_else(|| "Sans bloc".to_string()),
+                it.block_title
+                    .clone()
+                    .unwrap_or_else(|| "Sans bloc".to_string()),
                 0.0,
                 0.0,
             )

@@ -15,13 +15,19 @@ use crate::{
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/subjects/{id}/schemas", get(list).post(create))
-        .route("/schemas/{id}", get(get_one).patch(update).delete(delete_one))
+        .route(
+            "/schemas/{id}",
+            get(get_one).patch(update).delete(delete_one),
+        )
 }
 
 const SCHEMA_COLS: &str =
     "id, subject_id, block_id, title, reference, drawing, created_at, updated_at";
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<SchemaListItem>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<SchemaListItem>>> {
     let rows = sqlx::query_as::<_, SchemaListItem>(
         "SELECT id, title, created_at, (drawing IS NOT NULL) AS has_drawing \
          FROM schema_assets WHERE subject_id = $1 ORDER BY created_at DESC",

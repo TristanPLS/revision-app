@@ -112,11 +112,26 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* micro-interactions (révision) — neutralisées par prefers-reduced-motion */
+  --animate-reveal: reveal-rise 0.25s ease-out;
+
+  @keyframes reveal-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 @layer base {
@@ -127,6 +142,10 @@
     background-color: var(--background);
     color: var(--foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* identité : les titres de page passent en serif display (Fraunces) */
+  h1 {
+    font-family: var(--font-display), Georgia, serif;
   }
   /* visible focus ring everywhere (accessibility, Impeccable) */
   :focus-visible {

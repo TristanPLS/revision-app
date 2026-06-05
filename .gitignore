@@ -15,6 +15,3 @@ out/
 .DS_Store
 *.log
 Thumbs.db
-
-# NOTE: backend/.sqlx/ is intentionally NOT ignored — the offline query
-# cache must be committed so Docker builds without a live database.

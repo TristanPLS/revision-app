@@ -52,6 +52,34 @@ const sourceDocSchema = z.object({
 
 const generateAckSchema = z.object({ job_id: z.string(), status: z.string() });
 
+const providerDefaultsSchema = z.object({
+  base_url: z.string(),
+  model: z.string().nullable(),
+});
+
+const aiSettingsSchema = z.object({
+  provider: z.enum(["gemini", "openai", "anthropic"]),
+  model: z.string(),
+  base_url: z.string(),
+  api_key_set: z.boolean(),
+  api_key_hint: z.string().nullable(),
+  key_required: z.boolean(),
+  configured: z.boolean(),
+  defaults: z.object({
+    gemini: providerDefaultsSchema,
+    openai: providerDefaultsSchema,
+    anthropic: providerDefaultsSchema,
+  }),
+});
+export type AiSettings = z.infer<typeof aiSettingsSchema>;
+
+const aiTestSchema = z.object({
+  ok: z.boolean(),
+  model: z.string().optional(),
+  latency_ms: z.number().optional(),
+  error: z.string().optional(),
+});
+
 const closeSessionSchema = z.object({
   session: t.studySessionSchema,
   duration_min: z.number(),
@@ -253,6 +281,20 @@ export const api = {
         body: JSON.stringify(body),
       }),
     remove: (id: string) => request(`/api/schemas/${id}`, z.void(), { method: "DELETE" }),
+  },
+  settings: {
+    get: () => request("/api/settings", aiSettingsSchema),
+    update: (body: {
+      provider?: string;
+      model?: string;
+      base_url?: string;
+      api_key?: string;
+    }) =>
+      request("/api/settings", aiSettingsSchema, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    test: () => request("/api/settings/ai/test", aiTestSchema, { method: "POST" }),
   },
   fsrsInsights: (subjectId: string) =>
     request(`/api/subjects/${subjectId}/fsrs-insights`, t.fsrsInsightsSchema),

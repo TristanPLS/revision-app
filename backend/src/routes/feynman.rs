@@ -9,7 +9,10 @@ use uuid::Uuid;
 use crate::{
     ai,
     error::{AppError, AppResult},
-    models::{CreateFeynmanAttempt, CreateFeynmanConcept, FeynmanAttempt, FeynmanConcept, FeynmanConceptItem},
+    models::{
+        CreateFeynmanAttempt, CreateFeynmanConcept, FeynmanAttempt, FeynmanConcept,
+        FeynmanConceptItem,
+    },
     state::AppState,
 };
 
@@ -20,7 +23,10 @@ pub fn routes() -> Router<AppState> {
         .route("/feynman/{id}/attempts", get(history).post(create_attempt))
 }
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<FeynmanConceptItem>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<FeynmanConceptItem>>> {
     let rows = sqlx::query_as::<_, FeynmanConceptItem>(
         "SELECT c.id, c.block_id, c.title, c.hint, c.source, c.created_at, \
            (SELECT COUNT(*) FROM feynman_attempts a WHERE a.concept_id = c.id) AS attempts, \
@@ -56,7 +62,10 @@ async fn create(
     Ok((StatusCode::CREATED, Json(row)))
 }
 
-async fn get_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResult<Json<FeynmanConcept>> {
+async fn get_one(
+    State(s): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<FeynmanConcept>> {
     let row = sqlx::query_as::<_, FeynmanConcept>(&format!(
         "SELECT {CONCEPT_COLS} FROM feynman_concepts WHERE id = $1"
     ))
@@ -78,7 +87,10 @@ async fn delete_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResul
     Ok(StatusCode::NO_CONTENT)
 }
 
-async fn history(State(s): State<AppState>, Path(concept_id): Path<Uuid>) -> AppResult<Json<Vec<FeynmanAttempt>>> {
+async fn history(
+    State(s): State<AppState>,
+    Path(concept_id): Path<Uuid>,
+) -> AppResult<Json<Vec<FeynmanAttempt>>> {
     let rows = sqlx::query_as::<_, FeynmanAttempt>(
         "SELECT id, concept_id, self_rating, hesitations, duration_s, explanation, ai_feedback, ai_score, created_at \
          FROM feynman_attempts WHERE concept_id = $1 ORDER BY created_at DESC LIMIT 20",
@@ -107,9 +119,14 @@ async fn create_attempt(
     let mut ai_score: Option<i16> = None;
     if let Some(expl) = body.explanation.as_deref() {
         if !expl.trim().is_empty() && s.ai.is_configured() {
-            let (score, fb) =
-                ai::generate::grade_answer(&s.ai, &concept.title, concept.hint.as_deref(), expl, 100)
-                    .await;
+            let (score, fb) = ai::generate::grade_answer(
+                &s.ai,
+                &concept.title,
+                concept.hint.as_deref(),
+                expl,
+                100,
+            )
+            .await;
             ai_feedback = Some(fb);
             ai_score = Some(score.round() as i16);
         }

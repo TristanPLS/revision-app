@@ -12,7 +12,9 @@ use uuid::Uuid;
 
 use crate::{
     error::{AppError, AppResult},
-    models::{CreateFlashcard, Flashcard, ReviewRequest, ReviewResponse, UpdateFlashcard, FLASHCARD_COLS},
+    models::{
+        CreateFlashcard, Flashcard, ReviewRequest, ReviewResponse, UpdateFlashcard, FLASHCARD_COLS,
+    },
     srs::{Fsrs, MemoryState},
     state::AppState,
 };
@@ -22,7 +24,10 @@ pub fn routes() -> Router<AppState> {
         .route("/subjects/{id}/flashcards", get(list).post(create))
         .route("/subjects/{id}/flashcards/queue", get(queue))
         .route("/subjects/{id}/interleave", get(interleave))
-        .route("/flashcards/{id}", axum::routing::patch(update).delete(delete_one))
+        .route(
+            "/flashcards/{id}",
+            axum::routing::patch(update).delete(delete_one),
+        )
         .route("/flashcards/{id}/review", post(review))
 }
 

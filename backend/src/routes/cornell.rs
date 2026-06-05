@@ -22,7 +22,10 @@ pub fn routes() -> Router<AppState> {
         .route("/cornell/cues/{id}/to-flashcard", post(cue_to_flashcard))
 }
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<CornellNoteItem>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<CornellNoteItem>>> {
     let rows = sqlx::query_as::<_, CornellNoteItem>(
         "SELECT n.id, n.title, n.created_at, \
            (SELECT COUNT(*) FROM cornell_cues c WHERE c.note_id = n.id) AS cue_count \
@@ -73,7 +76,10 @@ async fn create(
     Ok((StatusCode::CREATED, Json(build_detail(&s, note.id).await?)))
 }
 
-async fn get_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResult<Json<CornellNoteDetail>> {
+async fn get_one(
+    State(s): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<CornellNoteDetail>> {
     Ok(Json(build_detail(&s, id).await?))
 }
 
@@ -127,7 +133,10 @@ struct CueJoin {
 }
 
 /// Convert a Cornell cue (margin question) into a flashcard, linking both ways.
-async fn cue_to_flashcard(State(s): State<AppState>, Path(cue_id): Path<Uuid>) -> AppResult<Json<Flashcard>> {
+async fn cue_to_flashcard(
+    State(s): State<AppState>,
+    Path(cue_id): Path<Uuid>,
+) -> AppResult<Json<Flashcard>> {
     let cue = sqlx::query_as::<_, CueJoin>(
         "SELECT c.question, c.answer, c.flashcard_id, c.note_id, n.subject_id, n.block_id \
          FROM cornell_cues c JOIN cornell_notes n ON n.id = c.note_id WHERE c.id = $1",

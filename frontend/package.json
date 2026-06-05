@@ -1,7 +1,9 @@
 {
-  "name": "frontend",
+  "name": "revision-frontend",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@9.11.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

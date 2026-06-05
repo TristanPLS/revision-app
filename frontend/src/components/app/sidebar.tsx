@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Home } from "lucide-react";
+import { GraduationCap, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
-const nav = [{ href: "/", label: "Accueil", icon: Home }];
+const nav = [
+  { href: "/", label: "Accueil", icon: Home },
+  { href: "/settings", label: "Réglages", icon: Settings },
+];
 
 function Brand() {
   return (
@@ -14,7 +17,7 @@ function Brand() {
       <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <GraduationCap className="size-5" />
       </span>
-      <span className="text-base">Révision</span>
+      <span className="font-display text-lg">Révision</span>
     </Link>
   );
 }

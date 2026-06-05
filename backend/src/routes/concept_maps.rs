@@ -18,7 +18,10 @@ pub fn routes() -> Router<AppState> {
         .route("/maps/{id}", get(get_one).delete(delete_one))
 }
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<ConceptMapListItem>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<ConceptMapListItem>>> {
     let rows = sqlx::query_as::<_, ConceptMapListItem>(
         "SELECT m.id, m.title, m.source, m.created_at, \
            (SELECT COUNT(*) FROM concept_map_nodes n WHERE n.map_id = m.id) AS node_count \
@@ -30,7 +33,10 @@ async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppRes
     Ok(Json(rows))
 }
 
-async fn get_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResult<Json<ConceptMapDetail>> {
+async fn get_one(
+    State(s): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<ConceptMapDetail>> {
     let map = sqlx::query_as::<_, ConceptMap>(
         "SELECT id, subject_id, block_id, title, source, created_at FROM concept_maps WHERE id = $1",
     )
