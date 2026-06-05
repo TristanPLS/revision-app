@@ -2,6 +2,9 @@
 name = "revision-backend"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Backend (Axum + FSRS) de revision-app — environnement de révision anti-bachotage"
+repository = "https://github.com/TristanPLS/revision-app"
 
 [[bin]]
 name = "revision-backend"
