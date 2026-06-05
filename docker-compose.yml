@@ -44,6 +44,10 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
     expose:
       - "8080"
+    # Permet d'atteindre un Ollama/LM Studio tournant sur la machine hôte via
+    # http://host.docker.internal:11434/v1 (y compris sous Linux).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
       interval: 30s
