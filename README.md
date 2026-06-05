@@ -12,6 +12,41 @@ carte conceptuelle, fiche Cornell et schémas à dessiner. Tu valides, tu révis
 > 🇫🇷 L'interface est en français. Le contenu généré (cartes, questions…) suit la
 > langue de ton cours.
 
+## 📸 Aperçu
+
+*Exemple réel : un cours « Guerre froide » transformé en supports de révision
+complets par l'IA, à partir d'un simple texte collé.*
+
+![Tableau de bord](docs/screenshots/dashboard.png)
+
+**« Tout générer » — l'IA lit ton cours, découpe en blocs et propose un plan
+complet que tu ajustes avant de lancer :**
+
+![Génération IA — plan « Tout générer »](docs/screenshots/generation.png)
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/review.png" alt="Révision en répétition espacée"><br>
+      <sub><b>Révision</b> — répétition espacée (FSRS), tu notes ta réponse</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/concept-map.png" alt="Carte conceptuelle"><br>
+      <sub><b>Carte conceptuelle</b> — hiérarchie et liens transversaux</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/exam.png" alt="Examen blanc chronométré"><br>
+      <sub><b>Examen blanc</b> — types mélangés, chronométré, correction IA</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/settings.png" alt="Page Réglages — configuration de la clé API"><br>
+      <sub><b>Réglages</b> — colle ta clé gratuite, et c'est parti</sub>
+    </td>
+  </tr>
+</table>
+
 ## ✨ Fonctionnalités
 
 - **Flashcards FSRS-5** — répétition espacée moderne (scheduler implémenté en Rust pur),
