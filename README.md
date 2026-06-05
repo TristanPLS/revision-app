@@ -125,6 +125,20 @@ plus que nécessaire pour réviser. Pas de carte bancaire.
 Comment savoir que ça marche : la page d'accueil s'affiche, et le test de
 connexion dans Réglages répond « Connexion réussie ».
 
+### 🎬 Essayer avec un cours d'exemple (sans clé IA)
+
+Tu veux voir l'app **déjà remplie** avant de configurer ta clé ? Charge le cours
+de démonstration « Guerre froide » (généré par l'IA : 34 flashcards, examen
+blanc, fiche Cornell, carte conceptuelle, schémas) :
+
+```bash
+docker compose exec -T postgres psql -U revision revision < scripts/demo-seed.sql
+```
+
+Recharge http://localhost:3000 : la matière **« Guerre froide (démo) »** t'attend,
+prête à réviser, **sans aucune clé IA**. Pour la retirer, supprime simplement la
+matière depuis l'app.
+
 **Mise à jour** : `docker compose pull && docker compose up -d` (ou
 `docker compose up -d --build` si tu construis localement). Tes données sont
 conservées (volume Docker `pgdata`).
