@@ -45,7 +45,7 @@ impl Config {
             gemini_base_url: env_opt("GEMINI_BASE_URL")
                 .unwrap_or_else(|| "https://generativelanguage.googleapis.com/v1beta".into()),
             ai_provider: env_opt("AI_PROVIDER").unwrap_or_else(|| "gemini".into()),
-            ai_model: env_opt("AI_MODEL").unwrap_or_else(|| "gemma-3-27b-it".into()),
+            ai_model: env_opt("AI_MODEL").unwrap_or_else(|| "gemma-4-31b-it".into()),
             fsrs_retention: env_opt("FSRS_RETENTION")
                 .and_then(|s| s.parse().ok())
                 .map(|r: f32| r.clamp(0.7, 0.97))

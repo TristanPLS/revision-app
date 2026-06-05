@@ -50,7 +50,8 @@ impl AiProvider {
     /// le renseigner.
     pub fn default_model(&self) -> Option<&'static str> {
         match self {
-            Self::Gemini => Some("gemma-3-27b-it"),
+            // Gemma 4 — gratuit sur Google AI Studio (~1500 requêtes/jour).
+            Self::Gemini => Some("gemma-4-31b-it"),
             Self::OpenAi => None,
             Self::Anthropic => Some("claude-opus-4-8"),
         }

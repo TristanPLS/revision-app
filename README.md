@@ -31,20 +31,33 @@ carte conceptuelle, fiche Cornell et schémas à dessiner. Tu valides, tu révis
 - **Garde-fous santé** — nudge sommeil après 22 h, jour de repos, plafonds de charge,
   suivi de série (streak). C'est un outil d'apprentissage durable, pas de cramming.
 
-## 🤖 L'IA : ta clé, ton choix (BYOK)
+## 🤖 L'IA : ta clé, gratuite (BYOK)
 
-L'app fonctionne avec **ta propre clé API**, configurée directement dans l'interface
-(page **Réglages**) — rien à éditer à la main. Trois fournisseurs supportés :
+Pour que l'IA travaille pour toi, il faut une « clé API » — un long mot de passe
+fourni par un service d'IA. Tu la colles **une seule fois** dans la page
+**Réglages** de l'app ; aucun fichier à éditer.
 
-| Fournisseur | Coût | Notes |
+### 👉 Recommandé : Google AI Studio, **gratuit**
+
+Pour des étudiant·e·s, pas besoin de payer. **Google AI Studio** donne accès au
+modèle **Gemma 4** gratuitement, avec environ **1500 générations par jour** — bien
+plus que nécessaire pour réviser. Pas de carte bancaire.
+
+➡️ **[Guide pas à pas pour obtenir ta clé gratuite (2 min)](docs/obtenir-une-cle-gemini.md)**
+
+### Autres fournisseurs (optionnels)
+
+| Fournisseur | Coût | Pour qui |
 |---|---|---|
-| **Google AI Studio** (Gemma) | **Gratuit** (limites/jour) | Recommandé pour démarrer — [obtenir une clé](https://aistudio.google.com/apikey) en 2 min |
-| **OpenAI-compatible** | Variable | Couvre OpenAI, **Ollama (100 % local et privé)**, LM Studio, Groq, Mistral… |
-| **Anthropic** (Claude) | Payant à l'usage | [Console Anthropic](https://console.anthropic.com/settings/keys) |
+| 🟢 **Google AI Studio** (Gemma 4) | **Gratuit** · ~1500 req/jour | **Recommandé** — la plupart des utilisateurs |
+| **Anthropic** (Claude) | 💳 Payant à l'usage | Si tu as déjà un compte Claude |
+| **OpenAI** (ChatGPT) | 💳 Payant à l'usage | Si tu as déjà un compte OpenAI |
+| **Ollama / LM Studio** | Gratuit, **100 % local** | Confidentialité totale (rien ne quitte ta machine) — via le fournisseur « OpenAI-compatible » |
 
-Sans clé configurée, tout le reste fonctionne (création manuelle de cartes, fiches,
-examens, révision FSRS) — seule la génération automatique est indisponible, et
-l'app te l'indique clairement.
+> Sans clé configurée, tout le reste de l'app fonctionne quand même (création
+> manuelle de cartes, fiches, examens, révision avec répétition espacée) — seule
+> la **génération automatique** depuis un cours est en pause, et l'app te le dit
+> clairement avec un bouton « Configurer ».
 
 ## 🚀 Installation (5 minutes)
 
@@ -67,7 +80,8 @@ l'app te l'indique clairement.
    ```
 
 3. **Ouvre http://localhost:3000**, va dans **Réglages**, colle ta clé API
-   (gratuite avec Google AI Studio), clique « Enregistrer et tester ». ✅
+   gratuite (voir le [guide pas à pas](docs/obtenir-une-cle-gemini.md)), clique
+   « Enregistrer et tester ». ✅
 
 Comment savoir que ça marche : la page d'accueil s'affiche, et le test de
 connexion dans Réglages répond « Connexion réussie ».

@@ -31,24 +31,26 @@ const PROVIDERS: {
   {
     id: "gemini",
     name: "Google AI Studio",
-    hint: "Gratuit — recommandé pour démarrer",
-    keyHelp: "Clé gratuite en 2 minutes sur AI Studio (compte Google requis).",
+    hint: "✅ Gratuit · ~1500 req/jour · recommandé",
+    keyHelp:
+      "Gemma 4, gratuit et amplement suffisant (~1500 générations/jour). Clé en 2 minutes avec un compte Google.",
     keyUrl: "https://aistudio.google.com/apikey",
-    modelPlaceholder: "gemma-3-27b-it",
+    modelPlaceholder: "gemma-4-31b-it",
   },
   {
     id: "openai",
-    name: "OpenAI-compatible",
-    hint: "OpenAI, Ollama (local), Groq, Mistral…",
+    name: "OpenAI / ChatGPT",
+    hint: "Payant · ou Ollama en local (gratuit)",
     keyHelp:
-      "Clé requise pour OpenAI/Groq/Mistral — laisse vide pour un serveur local (Ollama, LM Studio).",
-    modelPlaceholder: "nom du modèle (ex. llama3.1 pour Ollama)",
+      "Compte OpenAI payant à l'usage. Format compatible avec Groq, Mistral, et un serveur local Ollama/LM Studio (clé vide pour le local, 100 % gratuit et privé).",
+    keyUrl: "https://platform.openai.com/api-keys",
+    modelPlaceholder: "gpt-4o-mini (ou llama3.1 pour Ollama)",
   },
   {
     id: "anthropic",
-    name: "Anthropic",
-    hint: "Claude",
-    keyHelp: "Clé sur la console Anthropic (compte payant à l'usage).",
+    name: "Anthropic (Claude)",
+    hint: "Payant à l'usage",
+    keyHelp: "Compte Anthropic payant à l'usage — facturé par génération.",
     keyUrl: "https://console.anthropic.com/settings/keys",
     modelPlaceholder: "claude-opus-4-8",
   },
@@ -173,6 +175,26 @@ function AiSettingsForm({ initial }: { initial: AiSettings }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+          <p className="font-medium text-foreground">
+            💡 Étudiant·e ? Reste sur <span className="text-primary">Google AI Studio</span> —
+            c&apos;est gratuit.
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            Le modèle Gemma 4 offre environ <strong>1500 générations par jour</strong>,
+            largement assez pour réviser. Claude (Anthropic) et ChatGPT (OpenAI) sont
+            aussi disponibles, mais payants à l&apos;usage.{" "}
+            <a
+              href="https://aistudio.google.com/apikey"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            >
+              Obtenir ta clé gratuite <ExternalLink className="size-3" />
+            </a>
+          </p>
+        </div>
+
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium leading-none">Fournisseur</legend>
           <div className="grid gap-2 sm:grid-cols-3">
