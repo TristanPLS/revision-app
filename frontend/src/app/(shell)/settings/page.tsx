@@ -94,6 +94,9 @@ function AiSettingsForm({ initial }: { initial: AiSettings }) {
   function switchProvider(next: Provider) {
     setProvider(next);
     setTestResult(null);
+    // La clé d'un autre fournisseur n'est jamais valide → on vide le champ pour
+    // forcer la ressaisie (le backend efface aussi la clé au changement).
+    setApiKey("");
     // Si on revient au provider enregistré, restaure ses valeurs ; sinon,
     // pré-remplit avec les défauts du nouveau provider.
     if (next === saved.provider) {
@@ -203,9 +206,10 @@ function AiSettingsForm({ initial }: { initial: AiSettings }) {
                 key={p.id}
                 type="button"
                 onClick={() => switchProvider(p.id)}
+                disabled={busy}
                 aria-pressed={provider === p.id}
                 className={cn(
-                  "rounded-md border px-3 py-2.5 text-left transition-colors",
+                  "rounded-md border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60",
                   provider === p.id
                     ? "border-primary bg-primary/5 ring-1 ring-primary"
                     : "hover:border-primary/40"

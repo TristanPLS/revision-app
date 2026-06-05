@@ -75,16 +75,45 @@ pub struct AiSettings {
 }
 
 impl AiSettings {
+    /// Construit des réglages cohérents : modèle / URL absents → défauts DU
+    /// provider choisi (pas ceux de Gemini). Source unique de vérité, partagée
+    /// par le chemin env (`from_env`) et le chemin BDD (`routes::settings`).
+    pub fn resolve(
+        provider: AiProvider,
+        model: Option<String>,
+        base_url: Option<String>,
+        api_key: Option<String>,
+    ) -> Self {
+        let model = model
+            .map(|m| m.trim().to_string())
+            .filter(|m| !m.is_empty())
+            .or_else(|| provider.default_model().map(String::from))
+            .unwrap_or_default();
+        let base_url = base_url
+            .map(|u| u.trim().trim_end_matches('/').to_string())
+            .filter(|u| !u.is_empty())
+            .unwrap_or_else(|| provider.default_base_url().to_string());
+        let api_key = api_key
+            .map(|k| k.trim().to_string())
+            .filter(|k| !k.is_empty());
+        Self {
+            provider,
+            model,
+            base_url,
+            api_key,
+        }
+    }
+
     /// Réglages initiaux dérivés de l'environnement (fallback quand aucune
     /// ligne `app_settings` n'existe encore).
     pub fn from_env(cfg: &Config) -> Self {
         let provider = AiProvider::parse(&cfg.ai_provider).unwrap_or(AiProvider::Gemini);
-        Self {
+        Self::resolve(
             provider,
-            model: cfg.ai_model.clone(),
-            base_url: cfg.gemini_base_url.trim_end_matches('/').to_string(),
-            api_key: cfg.gemini_api_key.clone(),
-        }
+            cfg.ai_model.clone(),
+            cfg.ai_base_url.clone(),
+            cfg.gemini_api_key.clone(),
+        )
     }
 
     pub fn is_configured(&self) -> bool {

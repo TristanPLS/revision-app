@@ -72,12 +72,16 @@ plus que nécessaire pour réviser. Pas de carte bancaire.
    cd revision-app
    ```
 
-2. **Lance l'application** (aucun fichier à éditer — les images pré-construites
-   sont téléchargées, compte 2 à 5 minutes la première fois) :
+2. **Lance l'application** (aucun fichier à éditer) :
 
    ```bash
    docker compose up -d
    ```
+
+   La première fois, Docker récupère les images pré-construites (2 à 5 min). Si
+   elles ne sont pas encore disponibles, il construit l'application localement à
+   la place — c'est plus long (la compilation Rust peut prendre 10-20 min) mais
+   ça fonctionne sans rien faire de plus.
 
 3. **Ouvre http://localhost:3000**, va dans **Réglages**, colle ta clé API
    gratuite (voir le [guide pas à pas](docs/obtenir-une-cle-gemini.md)), clique
@@ -86,7 +90,8 @@ plus que nécessaire pour réviser. Pas de carte bancaire.
 Comment savoir que ça marche : la page d'accueil s'affiche, et le test de
 connexion dans Réglages répond « Connexion réussie ».
 
-**Mise à jour** : `docker compose pull && docker compose up -d`. Tes données sont
+**Mise à jour** : `docker compose pull && docker compose up -d` (ou
+`docker compose up -d --build` si tu construis localement). Tes données sont
 conservées (volume Docker `pgdata`).
 
 ### Accéder depuis ton téléphone / un autre appareil
@@ -175,9 +180,13 @@ cd frontend && pnpm install && pnpm dev   # http://localhost:3000
 ```
 
 Le frontend appelle l'API en même origine (`/api/*`) via les rewrites Next.js →
-aucun CORS. Avant de proposer une PR : `cargo fmt && cargo clippy && cargo test`
-côté backend, `pnpm lint && pnpm exec tsc --noEmit` côté frontend (c'est ce que
-vérifie la CI).
+aucun CORS. Avant de proposer une PR, fais tourner exactement ce que vérifie la CI
+(voir [CONTRIBUTING.md](CONTRIBUTING.md)) :
+
+```bash
+cd backend  && cargo fmt --check && cargo clippy -- -D warnings && cargo test
+cd frontend && pnpm lint && pnpm exec tsc --noEmit && pnpm build
+```
 
 ### Structure
 
@@ -196,6 +205,22 @@ vérifie la CI).
   dessin) — c'est là que la mémoire se construit.
 - Mono-utilisateur par design : 1 instance = 1 personne. Le multi-utilisateurs
   n'est pas un objectif de la v1.
+
+## 🚢 Publication (checklist mainteneur)
+
+Avant de rendre le dépôt public, pour que `docker compose up` fonctionne vraiment
+chez les utilisateurs :
+
+- [ ] **Nom du dépôt = `revision-app`** (les liens ci-dessus et les images GHCR le
+  supposent). Renomme-le dans *Settings → Repository name* si besoin.
+- [ ] **Publier les images** : pousse sur `main` ou crée un tag `v*` → le workflow
+  `docker.yml` construit et publie sur GHCR.
+- [ ] **Rendre les paquets GHCR publics** : *Profil → Packages →
+  `revision-app-backend` / `revision-app-frontend` → Package settings → Change
+  visibility → Public*. Sans ça, `docker compose pull` échoue pour les visiteurs
+  (il retombe alors sur un build local, plus lent).
+- [ ] **Faire tourner ta clé Gemini de dev** par précaution (elle n'est pas dans
+  le dépôt, mais a pu transiter dans des outils).
 
 ## 📄 Licence
 

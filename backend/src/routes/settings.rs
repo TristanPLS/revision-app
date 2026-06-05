@@ -51,35 +51,9 @@ pub async fn load_initial(pool: &PgPool, cfg: &Config) -> AiSettings {
                 .as_deref()
                 .and_then(AiProvider::parse)
                 .unwrap_or(AiProvider::Gemini);
-            resolve(provider, r.ai_model, r.ai_base_url, r.ai_api_key)
+            // Réutilise la résolution partagée (défauts du bon provider).
+            AiSettings::resolve(provider, r.ai_model, r.ai_base_url, r.ai_api_key)
         }
-    }
-}
-
-/// Complète modèle/URL absents avec les défauts du provider.
-fn resolve(
-    provider: AiProvider,
-    model: Option<String>,
-    base_url: Option<String>,
-    api_key: Option<String>,
-) -> AiSettings {
-    let model = model
-        .map(|m| m.trim().to_string())
-        .filter(|m| !m.is_empty())
-        .or_else(|| provider.default_model().map(String::from))
-        .unwrap_or_default();
-    let base_url = base_url
-        .map(|u| u.trim().trim_end_matches('/').to_string())
-        .filter(|u| !u.is_empty())
-        .unwrap_or_else(|| provider.default_base_url().to_string());
-    let api_key = api_key
-        .map(|k| k.trim().to_string())
-        .filter(|k| !k.is_empty());
-    AiSettings {
-        provider,
-        model,
-        base_url,
-        api_key,
     }
 }
 
@@ -166,13 +140,19 @@ async fn put_settings(
         } else {
             Some(current.base_url.clone())
         });
+    // Clé : valeur fournie remplace ; chaîne vide efface. Si absente du body,
+    // on garde la clé courante — SAUF en cas de changement de provider, où la
+    // clé d'un autre fournisseur est invalide (un clé Gemini n'authentifie pas
+    // Anthropic). On l'efface alors pour ne pas annoncer `configured:true` à
+    // tort, et l'UI force la ressaisie.
     let api_key = match body.api_key {
         Some(k) if k.trim().is_empty() => None,
         Some(k) => Some(k.trim().to_string()),
+        None if provider_changed => None,
         None => current.api_key.clone(),
     };
 
-    let new = resolve(provider, model, base_url, api_key);
+    let new = AiSettings::resolve(provider, model, base_url, api_key);
 
     // Persiste (la clé est stockée en clair — instance mono-utilisateur,
     // documenté dans le README), puis recharge le client à chaud.
