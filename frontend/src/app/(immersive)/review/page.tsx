@@ -161,10 +161,14 @@ function ReviewInner() {
             <p className="mb-2 text-center text-xs uppercase tracking-wide text-muted-foreground tabular">
               {pos + 1} / {total}
             </p>
-            <div className="flex min-h-64 flex-col justify-center rounded-xl border bg-card p-6 text-center sm:p-8">
+            {/* key = remontage à chaque carte → l'animation d'entrée rejoue */}
+            <div
+              key={current.id}
+              className="animate-reveal flex min-h-64 flex-col justify-center rounded-xl border bg-card p-6 text-center sm:p-8"
+            >
               <p className="text-xl font-medium leading-relaxed">{current.front}</p>
               {revealed && (
-                <>
+                <div className="animate-reveal">
                   <hr className="my-6 border-border" />
                   <p className="text-lg leading-relaxed text-foreground">{current.back}</p>
                   {current.hint && (
@@ -172,19 +176,19 @@ function ReviewInner() {
                       <Lightbulb className="size-4" /> {current.hint}
                     </p>
                   )}
-                </>
+                </div>
               )}
             </div>
 
             {/* Anti-fluence: rating only appears AFTER an attempt + reveal */}
             {revealed ? (
-              <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="animate-reveal mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {RATINGS.map((r) => (
                   <button
                     key={r.value}
                     onClick={() => rate(r.value)}
                     className={cn(
-                      "flex h-14 flex-col items-center justify-center rounded-lg text-rate-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "flex h-14 flex-col items-center justify-center rounded-lg text-rate-foreground transition hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       r.color
                     )}
                   >

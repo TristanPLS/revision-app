@@ -17,7 +17,7 @@ function Brand() {
       <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <GraduationCap className="size-5" />
       </span>
-      <span className="text-base">Révision</span>
+      <span className="font-display text-lg">Révision</span>
     </Link>
   );
 }

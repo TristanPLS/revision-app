@@ -4,7 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileQuestion,
+  MessageCircleQuestion,
+  Network,
+  NotebookPen,
+  PenTool,
+  Plus,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -14,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeitnerBoard } from "@/components/app/leitner-board";
+import { EmptyState } from "@/components/app/empty-state";
 
 export default function SubjectPage() {
   const { id } = useParams<{ id: string }>();
@@ -166,12 +177,17 @@ export default function SubjectPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucun examen.{" "}
-            <Link href={`/subjects/${id}/generate`} className="text-primary hover:underline">
-              Génère un examen blanc depuis ton cours →
-            </Link>
-          </p>
+          <EmptyState
+            icon={FileQuestion}
+            action={
+              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+                Génère un examen blanc depuis ton cours →
+              </Link>
+            }
+          >
+            Mets-toi en conditions réelles : questions mélangées, chrono, correction
+            IA des réponses libres.
+          </EmptyState>
         )}
       </section>
 
@@ -204,12 +220,17 @@ export default function SubjectPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucun concept.{" "}
-            <Link href={`/subjects/${id}/generate`} className="text-primary hover:underline">
-              Génère un menu Feynman →
-            </Link>
-          </p>
+          <EmptyState
+            icon={MessageCircleQuestion}
+            action={
+              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+                Génère un menu Feynman →
+              </Link>
+            }
+          >
+            Si tu sais l&apos;expliquer simplement, tu l&apos;as compris — une liste de
+            mécanismes à expliquer à voix haute.
+          </EmptyState>
         )}
       </section>
 
@@ -244,12 +265,17 @@ export default function SubjectPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucune note.{" "}
-            <Link href={`/subjects/${id}/cornell`} className="text-primary hover:underline">
-              Crée une note Cornell →
-            </Link>
-          </p>
+          <EmptyState
+            icon={NotebookPen}
+            action={
+              <Link href={`/subjects/${id}/cornell`} className="text-sm text-primary hover:underline">
+                Crée une note Cornell →
+              </Link>
+            }
+          >
+            Notes structurées + questions de rappel en marge, convertibles en
+            flashcards.
+          </EmptyState>
         )}
       </section>
 
@@ -281,12 +307,17 @@ export default function SubjectPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucune carte.{" "}
-            <Link href={`/subjects/${id}/generate`} className="text-primary hover:underline">
-              Génère une carte conceptuelle →
-            </Link>
-          </p>
+          <EmptyState
+            icon={Network}
+            action={
+              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+                Génère une carte conceptuelle →
+              </Link>
+            }
+          >
+            Visualise la structure du cours : hiérarchie des concepts et liens
+            transversaux.
+          </EmptyState>
         )}
       </section>
 
@@ -321,12 +352,17 @@ export default function SubjectPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucun schéma.{" "}
-            <Link href={`/subjects/${id}/schemas`} className="text-primary hover:underline">
-              Refais un schéma de mémoire →
-            </Link>
-          </p>
+          <EmptyState
+            icon={PenTool}
+            action={
+              <Link href={`/subjects/${id}/schemas`} className="text-sm text-primary hover:underline">
+                Dessine un schéma de mémoire →
+              </Link>
+            }
+          >
+            Dual coding : l&apos;IA te dit quoi dessiner, tu dessines de mémoire, puis
+            tu compares.
+          </EmptyState>
         )}
       </section>
 
