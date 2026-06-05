@@ -2,13 +2,22 @@
 
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+
+// Hydration-safe "mounted" detection: server snapshot is false, client true.
+const emptySubscribe = () => () => {};
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   if (!mounted) {
     return <Button variant="ghost" size="icon" aria-label="Thème" disabled />;

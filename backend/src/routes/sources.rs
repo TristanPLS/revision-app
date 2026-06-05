@@ -49,7 +49,9 @@ async fn create(
     Json(body): Json<CreateSource>,
 ) -> AppResult<(StatusCode, Json<SourceDocument>)> {
     if body.content.trim().is_empty() {
-        return Err(AppError::Validation("le contenu du cours est requis".into()));
+        return Err(AppError::Validation(
+            "le contenu du cours est requis".into(),
+        ));
     }
     let title = if body.title.trim().is_empty() {
         "Document".to_string()
@@ -69,7 +71,10 @@ async fn create(
     Ok((StatusCode::CREATED, Json(row)))
 }
 
-async fn get_one(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResult<Json<SourceDocument>> {
+async fn get_one(
+    State(s): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<SourceDocument>> {
     let row = sqlx::query_as::<_, SourceDocument>(&format!(
         "SELECT {SOURCE_COLS} FROM source_documents WHERE id = $1"
     ))
@@ -156,44 +161,89 @@ async fn generate(
         .title
         .clone()
         .unwrap_or_else(|| "Carte conceptuelle".to_string());
-    let cornell_title = req.title.clone().unwrap_or_else(|| "Fiche Cornell".to_string());
+    let cornell_title = req
+        .title
+        .clone()
+        .unwrap_or_else(|| "Fiche Cornell".to_string());
     tokio::spawn(async move {
         match kind {
             JobKind::Exam => {
                 ai::generate::run_exam(
-                    pool, ai_client, job_id, subject_id, content, count, block_id,
-                    block_title, exam_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    count,
+                    block_id,
+                    block_title,
+                    exam_title,
                 )
                 .await;
             }
             JobKind::ConceptMap => {
                 ai::generate::run_concept_map(
-                    pool, ai_client, job_id, subject_id, content, block_id, block_title, map_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    block_id,
+                    block_title,
+                    map_title,
                 )
                 .await;
             }
             JobKind::Feynman => {
                 ai::generate::run_feynman(
-                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    count,
+                    block_id,
+                    block_title,
                 )
                 .await;
             }
             JobKind::Cornell => {
                 ai::generate::run_cornell(
-                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    count,
+                    block_id,
+                    block_title,
                     cornell_title,
                 )
                 .await;
             }
             JobKind::Schema => {
                 ai::generate::run_schemas(
-                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    count,
+                    block_id,
+                    block_title,
                 )
                 .await;
             }
             _ => {
                 ai::generate::run_flashcards(
-                    pool, ai_client, job_id, subject_id, content, count, block_id, block_title,
+                    pool,
+                    ai_client,
+                    job_id,
+                    subject_id,
+                    content,
+                    count,
+                    block_id,
+                    block_title,
                 )
                 .await;
             }
@@ -205,7 +255,10 @@ async fn generate(
 
 /// Planning pass: analyse the source and return a proposed (editable) study
 /// plan — block breakdown + a quantity for each support, sized by the AI.
-async fn plan(State(s): State<AppState>, Path(source_id): Path<Uuid>) -> AppResult<Json<StudyPlan>> {
+async fn plan(
+    State(s): State<AppState>,
+    Path(source_id): Path<Uuid>,
+) -> AppResult<Json<StudyPlan>> {
     if !s.ai.is_configured() {
         return Err(AppError::AiNotConfigured);
     }
@@ -265,8 +318,13 @@ async fn generate_all(
     let ai_client = s.ai.clone();
     let subject_id = src.subject_id;
     let content = src.content.clone();
-    let exam_title = req.title.clone().unwrap_or_else(|| "Examen blanc".to_string());
-    let map_title = req.title.unwrap_or_else(|| "Carte conceptuelle".to_string());
+    let exam_title = req
+        .title
+        .clone()
+        .unwrap_or_else(|| "Examen blanc".to_string());
+    let map_title = req
+        .title
+        .unwrap_or_else(|| "Carte conceptuelle".to_string());
     tokio::spawn(async move {
         ai::generate::run_bundle(
             pool, ai_client, job_id, subject_id, content, plan, exam_title, map_title,
@@ -277,7 +335,10 @@ async fn generate_all(
     Ok(Json(json!({ "job_id": job_id, "status": "pending" })))
 }
 
-async fn job_status(State(s): State<AppState>, Path(id): Path<Uuid>) -> AppResult<Json<GenerationJob>> {
+async fn job_status(
+    State(s): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<GenerationJob>> {
     let row = sqlx::query_as::<_, GenerationJob>(
         "SELECT id, subject_id, source_id, kind, status, model, result, error, created_at, finished_at \
          FROM generation_jobs WHERE id = $1",

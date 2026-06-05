@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "node:path";
 
 // Same-origin API proxy: the browser only ever calls /api/* on the current
 // (Tailscale) origin, and Next forwards server-side to the Axum backend — so

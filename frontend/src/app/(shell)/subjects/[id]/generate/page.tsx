@@ -46,6 +46,8 @@ export default function GeneratePage() {
   const [bundleJobId, setBundleJobId] = useState<string | null>(null);
 
   const blocks = useQuery({ queryKey: ["blocks", id], queryFn: () => api.blocks.list(id) });
+  const settings = useQuery({ queryKey: ["settings"], queryFn: api.settings.get });
+  const aiReady = settings.data?.configured !== false;
 
   const job = useQuery({
     queryKey: ["job", jobId],
@@ -212,6 +214,22 @@ export default function GeneratePage() {
       >
         <ArrowLeft className="size-4" /> Retour à la matière
       </Link>
+
+      {!aiReady && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                L&apos;IA n&apos;est pas encore configurée
+              </span>{" "}
+              — ajoute ta clé API pour lancer une génération.
+            </p>
+            <Link href="/settings" className={cn(buttonVariants({ size: "sm" }))}>
+              Configurer
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Générer avec l&apos;IA</h1>
@@ -572,7 +590,7 @@ export default function GeneratePage() {
           <CardContent className="pt-6">
             <p className="font-medium text-destructive">Échec de la génération</p>
             <p className="text-sm text-muted-foreground">
-              {bundleJob.data?.error ?? "Vérifie la clé GEMINI_API_KEY et réessaie."}
+              {bundleJob.data?.error ?? "Vérifie ta clé API dans Réglages et réessaie."}
             </p>
           </CardContent>
         </Card>
@@ -629,7 +647,7 @@ export default function GeneratePage() {
           <CardContent className="pt-6">
             <p className="font-medium text-destructive">Échec de la génération</p>
             <p className="text-sm text-muted-foreground">
-              {job.data?.error ?? "Vérifie la clé GEMINI_API_KEY et réessaie."}
+              {job.data?.error ?? "Vérifie ta clé API dans Réglages et réessaie."}
             </p>
           </CardContent>
         </Card>

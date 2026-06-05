@@ -45,7 +45,7 @@ pub fn flashcards_prompt(
         count = count,
         scope = scope,
         menu = blocks_menu_rule(blocks_menu),
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
@@ -74,7 +74,7 @@ pub fn exam_prompt(
         count = count,
         scope = scope,
         menu = blocks_menu_rule(blocks_menu),
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
@@ -101,13 +101,17 @@ pub fn feynman_prompt(
         count = count,
         scope = scope,
         menu = blocks_menu_rule(blocks_menu),
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
 /// Prompt for a hierarchical concept map. `target_nodes` lets the planning pass
 /// size the map; `None` keeps the default 8–15 range.
-pub fn concept_map_prompt(source: &str, block_title: Option<&str>, target_nodes: Option<i32>) -> String {
+pub fn concept_map_prompt(
+    source: &str,
+    block_title: Option<&str>,
+    target_nodes: Option<i32>,
+) -> String {
     let scope = match block_title {
         Some(t) => format!(" Concentre-toi sur le thème : « {t} »."),
         None => String::new(),
@@ -127,7 +131,7 @@ pub fn concept_map_prompt(source: &str, block_title: Option<&str>, target_nodes:
          COURS :\n\"\"\"\n{src}\n\"\"\"",
         nodes_rule = nodes_rule,
         scope = scope,
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
@@ -150,7 +154,7 @@ pub fn plan_prompt(source: &str) -> String {
          - Vise une COUVERTURE complète sans redondance : un cours court mérite peu d'items, un cours dense davantage.\n\
          - Langue : celle du COURS. Réponds UNIQUEMENT en JSON conforme au schéma, sans texte autour.\n\n\
          COURS :\n\"\"\"\n{src}\n\"\"\"",
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
@@ -172,7 +176,7 @@ pub fn cornell_prompt(source: &str, count: i32, block_title: Option<&str>) -> St
          COURS :\n\"\"\"\n{src}\n\"\"\"",
         count = count,
         scope = scope,
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
@@ -202,12 +206,17 @@ pub fn schemas_prompt(
         count = count,
         scope = scope,
         menu = blocks_menu_rule(blocks_menu),
-        src = truncate(source, 16000),
+        src = truncate(source, super::max_source_chars()),
     )
 }
 
 /// Prompt to grade a free-text answer against a rubric, out of `max_points`.
-pub fn grade_prompt(question: &str, rubric: Option<&str>, response: &str, max_points: i32) -> String {
+pub fn grade_prompt(
+    question: &str,
+    rubric: Option<&str>,
+    response: &str,
+    max_points: i32,
+) -> String {
     let rub = rubric
         .map(|r| format!("\nPoints-clés attendus (barème) :\n{r}\n"))
         .unwrap_or_default();
@@ -216,7 +225,7 @@ pub fn grade_prompt(question: &str, rubric: Option<&str>, response: &str, max_po
          Sois juste mais exigeant ; valorise les bons éléments, signale les manques.\n\
          QUESTION : {q}\n{rub}\n\
          RÉPONSE DE L'ÉTUDIANT : {resp}\n\n\
-         Réponds UNIQUEMENT en JSON : {{\"score\": <nombre 0..{max}>, \"feedback\": \"<retour bref et utile, en français>\"}}.",
+         Réponds UNIQUEMENT en JSON : {{\"score\": <nombre 0..{max}>, \"feedback\": \"<retour bref et utile, dans la même langue que la QUESTION>\"}}.",
         max = max_points,
         q = question,
         rub = rub,

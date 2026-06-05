@@ -13,8 +13,8 @@ const FACTOR: f32 = 19.0 / 81.0;
 
 /// FSRS-5 default parameters (w0..w18).
 const W: [f32; 19] = [
-    0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575,
-    0.1192, 1.01925, 1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898, 0.51655, 0.6621,
+    0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925,
+    1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898, 0.51655, 0.6621,
 ];
 
 #[derive(Debug, Clone, Copy)]
@@ -195,13 +195,19 @@ mod tests {
             again <= hard && hard <= good && good <= easy,
             "expected monotonic intervals, got {again} {hard} {good} {easy}"
         );
-        assert!(easy >= 7, "Easy on a new card should schedule at least a week, got {easy}");
+        assert!(
+            easy >= 7,
+            "Easy on a new card should schedule at least a week, got {easy}"
+        );
     }
 
     #[test]
     fn recall_grows_stability_and_stays_review() {
         let f = Fsrs::new(0.9);
-        let m = MemoryState { stability: 5.0, difficulty: 5.0 };
+        let m = MemoryState {
+            stability: 5.0,
+            difficulty: 5.0,
+        };
         let out = f.schedule(Some(m), CardState::Review, 5, 3);
         assert!(out.stability > 5.0, "Good recall should grow stability");
         assert!(matches!(out.state, CardState::Review));
@@ -211,7 +217,10 @@ mod tests {
     #[test]
     fn lapse_marks_relearning_and_shrinks() {
         let f = Fsrs::new(0.9);
-        let m = MemoryState { stability: 30.0, difficulty: 5.0 };
+        let m = MemoryState {
+            stability: 30.0,
+            difficulty: 5.0,
+        };
         let out = f.schedule(Some(m), CardState::Review, 30, 1);
         assert!(out.lapsed);
         assert!(matches!(out.state, CardState::Relearning));
@@ -222,7 +231,10 @@ mod tests {
     #[test]
     fn easy_beats_good_on_review() {
         let f = Fsrs::new(0.9);
-        let m = MemoryState { stability: 10.0, difficulty: 5.0 };
+        let m = MemoryState {
+            stability: 10.0,
+            difficulty: 5.0,
+        };
         let good = f.schedule(Some(m), CardState::Review, 10, 3).scheduled_days;
         let easy = f.schedule(Some(m), CardState::Review, 10, 4).scheduled_days;
         assert!(easy >= good);

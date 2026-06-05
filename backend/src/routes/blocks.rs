@@ -19,7 +19,10 @@ pub fn routes() -> Router<AppState> {
         .route("/blocks/{id}", patch(update).delete(delete_one))
 }
 
-async fn list(State(s): State<AppState>, Path(subject_id): Path<Uuid>) -> AppResult<Json<Vec<Block>>> {
+async fn list(
+    State(s): State<AppState>,
+    Path(subject_id): Path<Uuid>,
+) -> AppResult<Json<Vec<Block>>> {
     let rows = sqlx::query_as::<_, Block>(
         "SELECT id, subject_id, code, title, summary, position, created_at \
          FROM blocks WHERE subject_id = $1 ORDER BY position, created_at",

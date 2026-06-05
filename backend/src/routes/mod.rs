@@ -7,6 +7,7 @@ pub mod flashcards;
 pub mod health;
 pub mod schemas;
 pub mod sessions;
+pub mod settings;
 pub mod sources;
 pub mod stats;
 pub mod subjects;
@@ -28,6 +29,7 @@ pub fn router(state: AppState) -> Router {
         .merge(concept_maps::routes())
         .merge(schemas::routes())
         .merge(sessions::routes())
+        .merge(settings::routes())
         .merge(stats::routes());
 
     Router::new().nest("/api", api).with_state(state)

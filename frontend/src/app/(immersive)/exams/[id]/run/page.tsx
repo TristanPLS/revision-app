@@ -34,12 +34,15 @@ export default function ExamRunPage() {
   });
 
   // Refs so the timer's auto-submit reads current values (no stale closures).
+  // Updated after each commit (a bare effect runs on every render).
   const answersRef = useRef(answers);
-  answersRef.current = answers;
   const examRef = useRef(exam.data);
-  examRef.current = exam.data;
   const attemptRef = useRef(attempt.data);
-  attemptRef.current = attempt.data;
+  useEffect(() => {
+    answersRef.current = answers;
+    examRef.current = exam.data;
+    attemptRef.current = attempt.data;
+  });
 
   const submit = useMutation({
     mutationFn: () => {

@@ -17,14 +17,20 @@ export function Pomodoro() {
 
   useEffect(() => {
     if (!running) return;
-    if (left <= 0) {
-      const next = mode === "work" ? "break" : "work";
-      setMode(next);
-      setLeft(next === "work" ? WORK : BREAK);
-      toast(next === "break" ? "Pause de 5 min — éloigne-toi de l'écran." : "Reprise du travail.");
-      return;
-    }
-    const t = setTimeout(() => setLeft((l) => l - 1), 1000);
+    // Toute mutation d'état se fait dans le callback (asynchrone) : la
+    // transition travail/pause a lieu au tick qui suit 00:01.
+    const t = setTimeout(() => {
+      if (left <= 1) {
+        const next = mode === "work" ? "break" : "work";
+        setMode(next);
+        setLeft(next === "work" ? WORK : BREAK);
+        toast(
+          next === "break" ? "Pause de 5 min — éloigne-toi de l'écran." : "Reprise du travail."
+        );
+      } else {
+        setLeft(left - 1);
+      }
+    }, 1000);
     return () => clearTimeout(t);
   }, [running, left, mode]);
 

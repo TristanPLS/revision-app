@@ -228,7 +228,7 @@ async fn guardrails(State(s): State<AppState>) -> AppResult<Json<Guardrails>> {
 
     let local = Local::now();
     let hour = local.hour();
-    let after_22h = hour >= 22 || hour < 5;
+    let after_22h = !(5..22).contains(&hour);
     let rest_day_today = local.weekday() == Weekday::Sun;
 
     let mut nudges = Vec::new();
@@ -236,10 +236,14 @@ async fn guardrails(State(s): State<AppState>) -> AppResult<Json<Guardrails>> {
         nudges.push("Il est tard — la consolidation se fait en dormant. Va dormir 😴".to_string());
     }
     if rest_day_today {
-        nudges.push("Aujourd'hui c'est repos. Laisse ton cerveau consolider — ferme l'app.".to_string());
+        nudges.push(
+            "Aujourd'hui c'est repos. Laisse ton cerveau consolider — ferme l'app.".to_string(),
+        );
     }
     if today.secs / 60 >= 45 {
-        nudges.push("Bel effort aujourd'hui. Pense aux pauses : le rythme bat le marathon.".to_string());
+        nudges.push(
+            "Bel effort aujourd'hui. Pense aux pauses : le rythme bat le marathon.".to_string(),
+        );
     }
 
     Ok(Json(Guardrails {

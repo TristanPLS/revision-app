@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Flame, Plus, Layers, Sparkles } from "lucide-react";
+import { Flame, KeyRound, Plus, Layers, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const qc = useQueryClient();
   const subjects = useQuery({ queryKey: ["subjects"], queryFn: api.subjects.list });
   const guardrails = useQuery({ queryKey: ["guardrails"], queryFn: api.guardrails });
+  const settings = useQuery({ queryKey: ["settings"], queryFn: api.settings.get });
   const [name, setName] = useState("");
 
   const createSubject = useMutation({
@@ -63,6 +64,28 @@ export default function DashboardPage() {
           </Badge>
         )}
       </header>
+
+      {settings.data && !settings.data.configured && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <KeyRound className="size-4" />
+              </span>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  L&apos;IA n&apos;est pas encore configurée.
+                </span>{" "}
+                Ajoute ta clé API (gratuite avec Google AI Studio) pour générer
+                flashcards, examens et fiches depuis tes cours.
+              </p>
+            </div>
+            <Link href="/settings" className={cn(buttonVariants({ size: "sm" }))}>
+              Configurer
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       <section className="space-y-3">
         <form

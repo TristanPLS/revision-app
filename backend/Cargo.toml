@@ -15,7 +15,7 @@ path = "src/main.rs"
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower-http = { version = "0.6", features = ["trace"] }
 
 # --- Base de données (sqlx 0.8 : compatible rustc 1.92 ; 0.9 exige 1.94) ---
 sqlx = { version = "0.8", default-features = false, features = [

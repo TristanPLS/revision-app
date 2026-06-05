@@ -9,9 +9,11 @@ pub fn routes() -> Router<AppState> {
 
 async fn health(State(state): State<AppState>) -> AppResult<Json<Value>> {
     sqlx::query("SELECT 1").execute(&state.pool).await?;
+    let ai = state.ai.snapshot();
     Ok(Json(json!({
         "status": "ok",
-        "ai_configured": state.ai.is_configured(),
-        "model": state.ai.model(),
+        "ai_configured": ai.is_configured(),
+        "provider": ai.provider.as_str(),
+        "model": ai.model,
     })))
 }
