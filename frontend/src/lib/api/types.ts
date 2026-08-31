@@ -348,3 +348,67 @@ export const fsrsInsightsSchema = z.object({
   recommendation: z.string(),
 });
 export type FsrsInsights = z.infer<typeof fsrsInsightsSchema>;
+
+// ---- Geography: flags & capitals (transversal, outside subjects) ----
+export const geoKind = z.enum(["flag", "capital"]);
+export type GeoKind = z.infer<typeof geoKind>;
+
+// No capital here: a queue item carries iso2, so the referential must not hand
+// out the expected answer before the card is played.
+export const geoCountrySchema = z.object({
+  iso2: z.string(),
+  name_fr: z.string(),
+  continent: z.string(),
+});
+export type GeoCountry = z.infer<typeof geoCountrySchema>;
+
+// Neither branch carries the expected answer: for a flag card the right name
+// hides among the 4 shuffled options, for a capital card only the country is
+// sent. The answer comes back from `api.geo.answer`, once the card is consumed.
+export const geoQueueItemSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("flag"),
+    card_id: z.string(),
+    iso2: z.string(),
+    options: z.array(z.string()).length(4),
+    continent: z.string(),
+    state: cardState,
+    due: z.string(),
+    reps: z.number(),
+  }),
+  z.object({
+    kind: z.literal("capital"),
+    card_id: z.string(),
+    iso2: z.string(),
+    country_name: z.string(),
+    continent: z.string(),
+    state: cardState,
+    due: z.string(),
+    reps: z.number(),
+  }),
+]);
+export type GeoQueueItem = z.infer<typeof geoQueueItemSchema>;
+export type GeoFlagItem = Extract<GeoQueueItem, { kind: "flag" }>;
+export type GeoCapitalItem = Extract<GeoQueueItem, { kind: "capital" }>;
+
+export const geoAnswerResponseSchema = z.object({
+  correct: z.boolean(),
+  expected: z.string(),
+  accepted_alternatives: z.array(z.string()),
+  next_due: z.string(),
+  scheduled_days: z.number(),
+  leitner_box: z.number(),
+  state: cardState,
+});
+export type GeoAnswerResponse = z.infer<typeof geoAnswerResponseSchema>;
+
+export const geoStatsSchema = z.object({
+  total_cards: z.number(),
+  new_cards: z.number(),
+  in_progress: z.number(),
+  mastered: z.number(),
+  due_now: z.number(),
+  // null before any answer has been logged
+  success_rate: z.number().nullable(),
+});
+export type GeoStats = z.infer<typeof geoStatsSchema>;

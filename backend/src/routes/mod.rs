@@ -4,6 +4,7 @@ pub mod cornell;
 pub mod exams;
 pub mod feynman;
 pub mod flashcards;
+pub mod geo;
 pub mod health;
 pub mod schemas;
 pub mod sessions;
@@ -23,6 +24,7 @@ pub fn router(state: AppState) -> Router {
         .merge(blocks::routes())
         .merge(sources::routes())
         .merge(flashcards::routes())
+        .merge(geo::routes())
         .merge(exams::routes())
         .merge(feynman::routes())
         .merge(cornell::routes())

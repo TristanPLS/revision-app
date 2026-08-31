@@ -7,20 +7,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:opacity-90",
+        // active: = retour visuel au tap (hover: est sous @media (hover:hover))
+        default: "bg-primary text-primary-foreground hover:opacity-90 active:opacity-80",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:opacity-80",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:bg-accent",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground hover:opacity-90",
+          "bg-destructive text-destructive-foreground hover:opacity-90 active:opacity-80",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        // 44px min height = comfortable touch target (phone use over Tailscale)
+        // 44px min height on touch = comfortable target (phone use over Tailscale);
+        // sm redescend à 36px à partir du breakpoint sm.
         default: "h-11 px-5 py-2",
-        sm: "h-9 rounded-md px-3 text-sm",
+        sm: "h-11 px-4 sm:h-9 sm:px-3 rounded-md text-sm",
         lg: "h-12 rounded-md px-7 text-base",
         icon: "h-11 w-11",
       },

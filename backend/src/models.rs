@@ -618,3 +618,79 @@ pub struct FsrsInsights {
     pub target_retention: f32,
     pub recommendation: String,
 }
+
+// ---------------------------------------------------------------------------
+// Geography: flags & capitals (transversal, outside subjects)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(type_name = "geo_kind", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum GeoKind {
+    Flag,
+    Capital,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct GeoCountry {
+    pub iso2: String,
+    pub name_fr: String,
+    pub continent: String,
+}
+
+/// Queue item as sent to the client while *playing* — never carries the
+/// expected answer (same rationale as `QuestionPublic`).
+#[derive(Debug, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum GeoQueueItem {
+    Flag {
+        card_id: Uuid,
+        iso2: String,
+        /// 4 shuffled country names, the right one among them.
+        options: Vec<String>,
+        continent: String,
+        state: CardState,
+        due: DateTime<Utc>,
+        reps: i32,
+    },
+    Capital {
+        card_id: Uuid,
+        iso2: String,
+        /// the question ("Capitale de X ?"), the capital itself stays server-side
+        country_name: String,
+        continent: String,
+        state: CardState,
+        due: DateTime<Utc>,
+        reps: i32,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GeoAnswerRequest {
+    pub given: String,
+    pub session_id: Option<Uuid>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GeoAnswerResponse {
+    pub correct: bool,
+    /// the canonical answer, revealed only once the card is consumed
+    pub expected: String,
+    pub accepted_alternatives: Vec<String>,
+    pub next_due: DateTime<Utc>,
+    pub scheduled_days: i32,
+    pub leitner_box: u8,
+    pub state: CardState,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GeoStats {
+    pub total_cards: i64,
+    pub new_cards: i64,
+    pub in_progress: i64,
+    /// Leitner boxes 4–5 (review cards with stability >= 10), same cut as stats.rs
+    pub mastered: i64,
+    pub due_now: i64,
+    /// share of correct answers over the whole geo_answers log; None before any answer
+    pub success_rate: Option<f32>,
+}

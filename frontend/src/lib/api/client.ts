@@ -282,6 +282,29 @@ export const api = {
       }),
     remove: (id: string) => request(`/api/schemas/${id}`, z.void(), { method: "DELETE" }),
   },
+  geo: {
+    // `continent` is an accented French label ("Amériques", "Océanie"), hence
+    // the explicit encoding — unlike the UUIDs the other endpoints interpolate.
+    countries: (continent?: string) =>
+      request(
+        `/api/geo/countries${continent ? `?continent=${encodeURIComponent(continent)}` : ""}`,
+        z.array(t.geoCountrySchema)
+      ),
+    queue: (kind: t.GeoKind, opts?: { continent?: string; limit?: number }) =>
+      request(
+        `/api/geo/queue?kind=${kind}` +
+          (opts?.continent ? `&continent=${encodeURIComponent(opts.continent)}` : "") +
+          (opts?.limit ? `&limit=${opts.limit}` : ""),
+        z.array(t.geoQueueItemSchema)
+      ),
+    answer: (cardId: string, given: string, sessionId?: string) =>
+      request(`/api/geo/cards/${cardId}/answer`, t.geoAnswerResponseSchema, {
+        method: "POST",
+        body: JSON.stringify({ given, session_id: sessionId ?? null }),
+      }),
+    stats: (kind?: t.GeoKind) =>
+      request(`/api/geo/stats${kind ? `?kind=${kind}` : ""}`, t.geoStatsSchema),
+  },
   settings: {
     get: () => request("/api/settings", aiSettingsSchema),
     update: (body: {

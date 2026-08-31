@@ -3,5 +3,5 @@ export default function ImmersiveLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="min-h-screen bg-background">{children}</div>;
+  return <div className="min-h-dvh bg-background">{children}</div>;
 }

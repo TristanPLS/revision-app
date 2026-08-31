@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,6 +41,26 @@ export default function SubjectPage() {
   const schemas = useQuery({ queryKey: ["schemas", id], queryFn: () => api.schemas.list(id) });
 
   const [blockTitle, setBlockTitle] = useState("");
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+
+  // Suppression en deux taps : le premier arme la ligne pendant 3 s, le second confirme.
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    };
+  }, []);
+  const armDelete = (itemId: string, remove: (id: string) => void) => {
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    if (confirmDelete === itemId) {
+      setConfirmDelete(null);
+      remove(itemId);
+    } else {
+      setConfirmDelete(itemId);
+      confirmTimer.current = setTimeout(() => setConfirmDelete(null), 3000);
+    }
+  };
 
   const addBlock = useMutation({
     mutationFn: () => api.blocks.create(id, { title: blockTitle.trim() }),
@@ -71,7 +91,7 @@ export default function SubjectPage() {
     <div className="space-y-10">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="-my-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Accueil
       </Link>
@@ -108,7 +128,7 @@ export default function SubjectPage() {
           <h2 className="text-sm font-medium text-muted-foreground">Progression</h2>
           <Link
             href={`/subjects/${id}/stats`}
-            className="text-sm text-primary hover:underline"
+            className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline"
           >
             Insights FSRS →
           </Link>
@@ -167,11 +187,12 @@ export default function SubjectPage() {
                 </Link>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size={confirmDelete === e.id ? "sm" : "icon"}
+                  className={cn(confirmDelete === e.id && "text-destructive")}
                   aria-label="Supprimer l'examen"
-                  onClick={() => deleteExam.mutate(e.id)}
+                  onClick={() => armDelete(e.id, deleteExam.mutate)}
                 >
-                  <Trash2 className="size-4" />
+                  {confirmDelete === e.id ? "Confirmer ?" : <Trash2 className="size-4" />}
                 </Button>
               </li>
             ))}
@@ -180,7 +201,7 @@ export default function SubjectPage() {
           <EmptyState
             icon={FileQuestion}
             action={
-              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+              <Link href={`/subjects/${id}/generate`} className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                 Génère un examen blanc depuis ton cours →
               </Link>
             }
@@ -223,7 +244,7 @@ export default function SubjectPage() {
           <EmptyState
             icon={MessageCircleQuestion}
             action={
-              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+              <Link href={`/subjects/${id}/generate`} className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                 Génère un menu Feynman →
               </Link>
             }
@@ -268,7 +289,7 @@ export default function SubjectPage() {
           <EmptyState
             icon={NotebookPen}
             action={
-              <Link href={`/subjects/${id}/cornell`} className="text-sm text-primary hover:underline">
+              <Link href={`/subjects/${id}/cornell`} className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                 Crée une note Cornell →
               </Link>
             }
@@ -310,7 +331,7 @@ export default function SubjectPage() {
           <EmptyState
             icon={Network}
             action={
-              <Link href={`/subjects/${id}/generate`} className="text-sm text-primary hover:underline">
+              <Link href={`/subjects/${id}/generate`} className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                 Génère une carte conceptuelle →
               </Link>
             }
@@ -355,7 +376,7 @@ export default function SubjectPage() {
           <EmptyState
             icon={PenTool}
             action={
-              <Link href={`/subjects/${id}/schemas`} className="text-sm text-primary hover:underline">
+              <Link href={`/subjects/${id}/schemas`} className="-my-2 inline-flex min-h-11 items-center text-sm text-primary hover:underline">
                 Dessine un schéma de mémoire →
               </Link>
             }
@@ -412,18 +433,37 @@ export default function SubjectPage() {
           <ul className="divide-y rounded-lg border">
             {cards.data.slice(0, 50).map((c) => (
               <li key={c.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{c.front}</p>
-                  <p className="truncate text-sm text-muted-foreground">{c.back}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setExpandedCard(expandedCard === c.id ? null : c.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      expandedCard === c.id ? "whitespace-pre-wrap break-words" : "truncate"
+                    )}
+                  >
+                    {c.front}
+                  </p>
+                  <p
+                    className={cn(
+                      "text-sm text-muted-foreground",
+                      expandedCard === c.id ? "whitespace-pre-wrap break-words" : "truncate"
+                    )}
+                  >
+                    {c.back}
+                  </p>
+                </button>
                 {c.source === "ai" && <Badge variant="muted">IA</Badge>}
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size={confirmDelete === c.id ? "sm" : "icon"}
+                  className={cn(confirmDelete === c.id && "text-destructive")}
                   aria-label="Supprimer la carte"
-                  onClick={() => deleteCard.mutate(c.id)}
+                  onClick={() => armDelete(c.id, deleteCard.mutate)}
                 >
-                  <Trash2 className="size-4" />
+                  {confirmDelete === c.id ? "Confirmer ?" : <Trash2 className="size-4" />}
                 </Button>
               </li>
             ))}
@@ -431,7 +471,10 @@ export default function SubjectPage() {
         ) : (
           <p className="text-sm text-muted-foreground">
             Pas encore de cartes.{" "}
-            <Link href={`/subjects/${id}/generate`} className="text-primary hover:underline">
+            <Link
+              href={`/subjects/${id}/generate`}
+              className="-my-2 inline-flex min-h-11 items-center text-primary hover:underline"
+            >
               Génère-en depuis ton cours →
             </Link>
           </p>

@@ -45,7 +45,7 @@ function ResultsInner() {
     <div className="space-y-8">
       <Link
         href={subjectId ? `/subjects/${subjectId}` : "/"}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="-my-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Retour à la matière
       </Link>
@@ -83,8 +83,8 @@ function ResultsInner() {
                     return (
                       <div key={b.block_id ?? b.title} className="space-y-1">
                         <div className="flex justify-between text-sm">
-                          <span>{b.title}</span>
-                          <span className="tabular text-muted-foreground">
+                          <span className="min-w-0 flex-1 truncate pr-2">{b.title}</span>
+                          <span className="tabular shrink-0 whitespace-nowrap text-muted-foreground">
                             {Math.round(b.awarded)}/{Math.round(b.max)} · {p}%
                           </span>
                         </div>

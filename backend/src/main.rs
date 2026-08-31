@@ -2,6 +2,7 @@ mod ai;
 mod config;
 mod db;
 mod error;
+mod geo_answer;
 mod models;
 mod routes;
 mod srs;

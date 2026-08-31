@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Sparkles, CheckCircle2, Wand2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, CheckCircle2, Wand2, Plus, Minus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api/client";
 import type { StudyPlan } from "@/lib/api/types";
@@ -210,7 +210,7 @@ export default function GeneratePage() {
     <div className="space-y-8">
       <Link
         href={`/subjects/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 py-3 -my-3 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Retour à la matière
       </Link>
@@ -240,13 +240,13 @@ export default function GeneratePage() {
       </header>
 
       {/* Mode switch */}
-      <div className="flex flex-wrap gap-1 rounded-lg border p-1">
+      <div className="flex flex-wrap gap-2 rounded-lg border p-1">
         <button
           type="button"
           onClick={() => setMode("all")}
           disabled={running || bundleRunning}
           className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            "flex min-h-11 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-0",
             mode === "all"
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -259,7 +259,7 @@ export default function GeneratePage() {
           onClick={() => setMode("single")}
           disabled={running || bundleRunning}
           className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            "min-h-11 rounded-md px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-0",
             mode === "single"
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -272,7 +272,7 @@ export default function GeneratePage() {
       <Card>
         <CardContent className="space-y-5 pt-6">
           {mode === "single" && (
-            <div className="flex flex-wrap gap-1 rounded-lg border p-1">
+            <div className="flex flex-wrap gap-2 rounded-lg border p-1">
               {(["flashcards", "exam", "feynman", "concept_map", "cornell", "schema"] as const).map(
                 (k) => (
                   <button
@@ -281,7 +281,7 @@ export default function GeneratePage() {
                     onClick={() => setKind(k)}
                     disabled={running}
                     className={cn(
-                      "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                      "min-h-11 rounded-md px-3 py-1.5 text-sm font-medium transition-colors sm:min-h-0",
                       kind === k
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground"
@@ -333,14 +333,12 @@ export default function GeneratePage() {
                         ? "Nombre de schémas"
                         : "Nombre de cartes"}
                 </Label>
-                <Input
+                <NumberStepper
                   id="count"
-                  type="number"
                   min={1}
                   max={50}
                   value={count}
-                  onChange={(e) => setCount(Math.min(50, Math.max(1, Number(e.target.value) || 1)))}
-                  className="tabular"
+                  onChange={setCount}
                   disabled={running}
                 />
               </div>
@@ -483,7 +481,7 @@ export default function GeneratePage() {
                         })
                       }
                       placeholder="Code"
-                      className="w-20 shrink-0"
+                      className="w-16 shrink-0"
                       disabled={bundleRunning}
                       aria-label={`Code du bloc ${i + 1}`}
                     />
@@ -498,6 +496,7 @@ export default function GeneratePage() {
                         })
                       }
                       placeholder="Titre du bloc"
+                      className="min-w-0 flex-1"
                       disabled={bundleRunning}
                       aria-label={`Titre du bloc ${i + 1}`}
                     />
@@ -609,7 +608,7 @@ export default function GeneratePage() {
               </p>
               <p className="text-sm text-muted-foreground">{doneSubtitle}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link href={`/subjects/${id}`} className={cn(buttonVariants({ variant: "outline" }))}>
                 Voir la matière
               </Link>
@@ -656,6 +655,71 @@ export default function GeneratePage() {
   );
 }
 
+function NumberStepper({
+  id,
+  value,
+  min,
+  max,
+  onChange,
+  disabled,
+  ariaLabel,
+}: {
+  id?: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+  ariaLabel?: string;
+}) {
+  // Saisie libre pendant la frappe ; le clamp n'arrive qu'au blur.
+  const [draft, setDraft] = useState<string | null>(null);
+  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+  const step = (delta: number) => {
+    setDraft(null);
+    onChange(clamp(value + delta));
+  };
+  return (
+    <div className="flex gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        aria-label="Diminuer"
+        disabled={disabled || value <= min}
+        onClick={() => step(-1)}
+      >
+        <Minus className="size-4" />
+      </Button>
+      <Input
+        id={id}
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={draft ?? String(value)}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={(e) => {
+          const n = Number(e.target.value);
+          onChange(e.target.value.trim() !== "" && Number.isFinite(n) ? clamp(n) : min);
+          setDraft(null);
+        }}
+        className="tabular min-w-0 flex-1 text-center"
+        disabled={disabled}
+        aria-label={ariaLabel}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        aria-label="Augmenter"
+        disabled={disabled || value >= max}
+        onClick={() => step(1)}
+      >
+        <Plus className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
 function PlanCount({
   label,
   value,
@@ -672,14 +736,13 @@ function PlanCount({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input
-        type="number"
+      <NumberStepper
+        value={value}
         min={0}
         max={max}
-        value={value}
-        onChange={(e) => onChange(Math.min(max, Math.max(0, Number(e.target.value) || 0)))}
-        className="tabular"
+        onChange={onChange}
         disabled={disabled}
+        ariaLabel={label}
       />
     </div>
   );
