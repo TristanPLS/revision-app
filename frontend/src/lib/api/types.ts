@@ -362,15 +362,15 @@ export const geoCountrySchema = z.object({
 });
 export type GeoCountry = z.infer<typeof geoCountrySchema>;
 
-// Neither branch carries the expected answer: for a flag card the right name
-// hides among the 4 shuffled options, for a capital card only the country is
-// sent. The answer comes back from `api.geo.answer`, once the card is consumed.
+// Neither branch carries the expected answer: a flag card sends only the iso2
+// (which is the question — the client renders the matching SVG), a capital card
+// only the country. The answer comes back from `api.geo.answer`, once the card
+// is consumed.
 export const geoQueueItemSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("flag"),
     card_id: z.string(),
     iso2: z.string(),
-    options: z.array(z.string()).length(4),
     continent: z.string(),
     state: cardState,
     due: z.string(),

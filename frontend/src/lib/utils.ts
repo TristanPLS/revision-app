@@ -7,16 +7,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * ISO2 → flag emoji, via the Unicode regional indicators (0x1F1E6 + letter).
- * Ships no glyph on Windows/Chrome, which has no flag font: the pair of letters
- * ("FR") shows through instead. Acceptable — the target is the phone (iOS and
- * Android both render these), the desktop is only a fallback screen.
+ * ISO2 → path of the flag served from public/flags. SVG files rather than the
+ * Unicode regional indicators, which Windows renders as a bare letter pair —
+ * i.e. the answer, on the very screen that asks for it.
  * Returns "" on anything that is not two ASCII letters.
  */
-export function flagEmoji(iso2: string): string {
-  const code = iso2.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(code)) return "";
-  return String.fromCodePoint(
-    ...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)
-  );
+export function flagSrc(iso2: string): string {
+  const code = iso2.trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(code)) return "";
+  return `/flags/${code}.svg`;
 }
