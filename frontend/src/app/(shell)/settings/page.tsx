@@ -261,6 +261,9 @@ function AiSettingsForm({ initial }: { initial: AiSettings }) {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder={meta.modelPlaceholder}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
           <div className="space-y-2">
@@ -270,6 +273,10 @@ function AiSettingsForm({ initial }: { initial: AiSettings }) {
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
               placeholder={saved.defaults[provider].base_url}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="url"
             />
           </div>
         </div>

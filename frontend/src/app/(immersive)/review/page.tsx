@@ -57,9 +57,14 @@ function ReviewInner() {
     };
   }, [subjectId, qc]);
 
-  // Session timer (fatigue guardrail).
+  // Session timer (fatigue guardrail). Basé sur un timestamp : setInterval est
+  // suspendu quand l'écran s'éteint, un compteur incrémental sous-compterait.
   useEffect(() => {
-    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
+    const start = Date.now();
+    const t = setInterval(
+      () => setElapsed(Math.floor((Date.now() - start) / 1000)),
+      1000
+    );
     return () => clearInterval(t);
   }, []);
 
@@ -121,12 +126,12 @@ function ReviewInner() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 py-6">
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-6">
       {/* Top bar */}
       <div className="flex items-center gap-4">
         <Link
           href={`/subjects/${subjectId}`}
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-3 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
           aria-label="Quitter la session"
         >
           <X className="size-5" />
@@ -193,7 +198,7 @@ function ReviewInner() {
                     )}
                   >
                     <span className="text-sm font-medium">{r.label}</span>
-                    <span className="text-xs opacity-80">{r.key}</span>
+                    <span className="hidden text-xs opacity-80 sm:inline">{r.key}</span>
                   </button>
                 ))}
               </div>
@@ -203,7 +208,7 @@ function ReviewInner() {
                 className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full gap-2")}
               >
                 <Eye /> Afficher la réponse
-                <span className="text-xs opacity-70">(Espace)</span>
+                <span className="hidden text-xs opacity-70 sm:inline">(Espace)</span>
               </button>
             )}
           </div>
@@ -253,7 +258,7 @@ function Done({
 
 function CenteredMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center text-muted-foreground">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center text-muted-foreground">
       <div className="flex max-w-sm flex-col items-center">{children}</div>
     </div>
   );

@@ -21,6 +21,7 @@ export default function SchemaCanvas({
       <div className="flex justify-end">
         <Button
           size="sm"
+          className="w-full sm:w-auto"
           disabled={saving}
           onClick={() => {
             if (ref.current) onSave(getSnapshot(ref.current.store));
@@ -30,7 +31,7 @@ export default function SchemaCanvas({
           Enregistrer le dessin
         </Button>
       </div>
-      <div className="relative h-[60vh] overflow-hidden rounded-lg border">
+      <div className="relative h-[45dvh] overflow-hidden rounded-lg border md:h-[60vh]">
         <Tldraw
           onMount={(editor) => {
             ref.current = editor;

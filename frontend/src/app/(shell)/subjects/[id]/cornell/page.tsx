@@ -112,7 +112,7 @@ function NoteEditor({ subjectId }: { subjectId: string }) {
         </div>
 
         <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-          <div className="space-y-2">
+          <div className="space-y-2 max-md:order-2">
             <Label>Questions de marge</Label>
             <div className="space-y-2">
               {cues.map((c, i) => (
@@ -123,7 +123,6 @@ function NoteEditor({ subjectId }: { subjectId: string }) {
                       setCues((cs) => cs.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))
                     }
                     placeholder="Question…"
-                    className="h-9"
                   />
                   <Input
                     value={c.answer}
@@ -131,7 +130,6 @@ function NoteEditor({ subjectId }: { subjectId: string }) {
                       setCues((cs) => cs.map((x, j) => (j === i ? { ...x, answer: e.target.value } : x)))
                     }
                     placeholder="Réponse (optionnel)"
-                    className="h-9"
                   />
                 </div>
               ))}
@@ -147,7 +145,7 @@ function NoteEditor({ subjectId }: { subjectId: string }) {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-md:order-1">
             <Label htmlFor="body">Notes</Label>
             <Textarea
               id="body"
@@ -204,7 +202,7 @@ function NoteView({ noteId, subjectId }: { noteId: string; subjectId: string }) 
         <h2 className="text-xl font-semibold">{note.data.title}</h2>
 
         <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-          <div className="space-y-2 md:border-r md:pr-4">
+          <div className="space-y-2 max-md:order-2 md:border-r md:pr-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Questions</p>
             {note.data.cues.length === 0 && (
               <p className="text-sm text-muted-foreground">Aucune.</p>
@@ -221,7 +219,7 @@ function NoteView({ noteId, subjectId }: { noteId: string; subjectId: string }) 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="min-h-11 text-xs sm:min-h-8"
                     disabled={toFlashcard.isPending}
                     onClick={() => toFlashcard.mutate(c.id)}
                   >
@@ -232,7 +230,7 @@ function NoteView({ noteId, subjectId }: { noteId: string; subjectId: string }) 
             ))}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 max-md:order-1">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{note.data.body}</p>
           </div>
         </div>

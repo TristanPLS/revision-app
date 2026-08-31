@@ -48,7 +48,7 @@ export function Pomodoro() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Ouvrir le minuteur Pomodoro"
-        className="fixed bottom-4 right-4 z-40 flex size-12 items-center justify-center rounded-full border bg-card text-foreground shadow-sm transition-colors hover:bg-accent"
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 flex size-12 items-center justify-center rounded-full border bg-card text-foreground shadow-sm transition-colors hover:bg-accent"
       >
         <Timer className="size-5" />
       </button>
@@ -56,13 +56,13 @@ export function Pomodoro() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-56 rounded-xl border bg-card p-4 shadow-lg">
+    <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 w-56 rounded-xl border bg-card p-4 shadow-lg">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-medium">Pomodoro</span>
         <button
           onClick={() => setOpen(false)}
           aria-label="Fermer"
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-3 flex size-11 items-center justify-center text-muted-foreground active:text-foreground hover:text-foreground"
         >
           <X className="size-4" />
         </button>

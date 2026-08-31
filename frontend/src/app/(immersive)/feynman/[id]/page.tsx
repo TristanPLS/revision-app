@@ -31,12 +31,42 @@ export default function FeynmanPracticePage() {
   const [result, setResult] = useState<FeynmanAttempt | null>(null);
   const timerOn = useRef(true);
 
+  // Timer basé sur un timestamp : setInterval est suspendu quand l'écran
+  // s'éteint, un compteur incrémental sous-compterait le temps réel.
+  const startRef = useRef(0);
   useEffect(() => {
+    startRef.current = Date.now();
     const t = setInterval(() => {
-      if (timerOn.current) setElapsed((e) => e + 1);
+      if (timerOn.current) setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
     }, 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Empêche l'écran de se verrouiller pendant l'explication à voix haute.
+  useEffect(() => {
+    if (phase !== "explain") return;
+    let lock: WakeLockSentinel | null = null;
+    let active = true;
+    const request = async () => {
+      try {
+        const l = await navigator.wakeLock.request("screen");
+        if (active) lock = l;
+        else l.release().catch(() => {});
+      } catch {
+        // API absente (vieux navigateurs) ou refusée — non bloquant
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") request();
+    };
+    request();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      active = false;
+      document.removeEventListener("visibilitychange", onVisibility);
+      lock?.release().catch(() => {});
+    };
+  }, [phase]);
 
   const submit = useMutation({
     mutationFn: () =>
@@ -71,14 +101,15 @@ export default function FeynmanPracticePage() {
     setExplanation("");
     setResult(null);
     timerOn.current = true;
+    startRef.current = Date.now();
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 py-6">
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-6">
       <div className="flex items-center gap-4">
         <Link
           href={subjectId ? `/subjects/${subjectId}` : "/"}
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-3 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
           aria-label="Quitter"
         >
           <X className="size-5" />
@@ -115,7 +146,7 @@ export default function FeynmanPracticePage() {
                 size="lg"
                 onClick={() => {
                   timerOn.current = false;
-                  setDuration(elapsed);
+                  setDuration(Math.floor((Date.now() - startRef.current) / 1000));
                   setPhase("rate");
                 }}
               >
@@ -173,14 +204,16 @@ export default function FeynmanPracticePage() {
               />
             </div>
 
-            <Button
-              className="w-full gap-2"
-              disabled={rating === null || submit.isPending}
-              onClick={() => submit.mutate()}
-            >
-              {submit.isPending && <Loader2 className="animate-spin" />}
-              Valider
-            </Button>
+            <div className="sticky bottom-0 -mx-4 bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <Button
+                className="w-full gap-2"
+                disabled={rating === null || submit.isPending}
+                onClick={() => submit.mutate()}
+              >
+                {submit.isPending && <Loader2 className="animate-spin" />}
+                Valider
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="w-full space-y-4 text-center">

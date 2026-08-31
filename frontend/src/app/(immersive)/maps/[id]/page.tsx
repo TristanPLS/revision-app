@@ -75,11 +75,11 @@ export default function ConceptMapPage() {
   const flow = useMemo(() => (map.data ? layout(map.data) : null), [map.data]);
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center gap-4 border-b px-4 py-3">
         <Link
           href={map.data ? `/subjects/${map.data.subject_id}` : "/"}
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-3 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
           aria-label="Fermer"
         >
           <X className="size-5" />
@@ -88,9 +88,20 @@ export default function ConceptMapPage() {
       </div>
       <div className="relative flex-1">
         {flow ? (
-          <ReactFlow nodes={flow.nodes} edges={flow.edges} fitView minZoom={0.2}>
+          <ReactFlow
+            nodes={flow.nodes}
+            edges={flow.edges}
+            fitView
+            minZoom={0.2}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+          >
             <Background />
-            <Controls />
+            {/* La CSS xyflow (non "layered") écrase un `hidden` posé via className → wrapper. */}
+            <div className="hidden sm:block">
+              <Controls />
+            </div>
           </ReactFlow>
         ) : (
           <div className="p-6">
