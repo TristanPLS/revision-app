@@ -3,7 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpenCheck, Flame, KeyRound, Plus, Layers, Sparkles } from "lucide-react";
+import {
+  BookOpenCheck,
+  Flag,
+  Flame,
+  KeyRound,
+  Landmark,
+  Plus,
+  Layers,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -17,14 +27,25 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/app/empty-state";
+import type { GeoStats } from "@/lib/api/types";
 
 export default function DashboardPage() {
   const qc = useQueryClient();
   const subjects = useQuery({ queryKey: ["subjects"], queryFn: api.subjects.list });
   const guardrails = useQuery({ queryKey: ["guardrails"], queryFn: api.guardrails });
   const settings = useQuery({ queryKey: ["settings"], queryFn: api.settings.get });
+  // Mêmes clés que les pages géo : une série jouée invalide ces stats au retour.
+  const flagStats = useQuery({
+    queryKey: ["geo-stats", "flag"],
+    queryFn: () => api.geo.stats("flag"),
+  });
+  const capitalStats = useQuery({
+    queryKey: ["geo-stats", "capital"],
+    queryFn: () => api.geo.stats("capital"),
+  });
   const [name, setName] = useState("");
 
   const createSubject = useMutation({
@@ -56,7 +77,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Stats héro */}
-      <section className="grid grid-cols-3 gap-3 sm:gap-4">
+      <section className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatTile
           icon={BookOpenCheck}
           value={totalDue}
@@ -125,10 +146,13 @@ export default function DashboardPage() {
         ) : subjects.data && subjects.data.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {subjects.data.map((s) => (
-              <Card key={s.id} className="flex flex-col transition-colors hover:border-primary/40">
+              <Card key={s.id} className="relative flex flex-col transition-colors hover:border-primary/40">
                 <CardHeader>
                   <CardTitle>
-                    <Link href={`/subjects/${s.id}`} className="hover:underline">
+                    <Link
+                      href={`/subjects/${s.id}`}
+                      className="hover:underline after:absolute after:inset-0"
+                    >
                       {s.name}
                     </Link>
                   </CardTitle>
@@ -149,14 +173,14 @@ export default function DashboardPage() {
                     {s.due_count > 0 ? (
                       <Link
                         href={`/review?subject=${s.id}`}
-                        className={cn(buttonVariants({ size: "sm" }))}
+                        className={cn(buttonVariants({ size: "sm" }), "relative z-10")}
                       >
                         Réviser
                       </Link>
                     ) : (
                       <Link
                         href={`/subjects/${s.id}`}
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "relative z-10")}
                       >
                         Ouvrir
                       </Link>
@@ -172,6 +196,28 @@ export default function DashboardPage() {
             générera des flashcards prêtes à réviser.
           </EmptyState>
         )}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-medium text-muted-foreground">Géographie</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <GeoCard
+            href="/geo/flags"
+            icon={Flag}
+            title="Devine le drapeau"
+            description="Retrouve le pays parmi quatre propositions."
+            stats={flagStats.data}
+            loading={flagStats.isPending}
+          />
+          <GeoCard
+            href="/geo/capitals"
+            icon={Landmark}
+            title="Capitales"
+            description="Écris la capitale de mémoire, sans choix multiple."
+            stats={capitalStats.data}
+            loading={capitalStats.isPending}
+          />
+        </div>
       </section>
     </div>
   );
@@ -191,7 +237,7 @@ function StatTile({
 }) {
   return (
     <Card className={cn(highlight && "border-primary/40")}>
-      <CardContent className="flex flex-col gap-1 py-4 sm:py-5">
+      <CardContent className="flex flex-col gap-1 px-3 py-4 sm:px-6 sm:py-5">
         <Icon
           className={cn("size-4", highlight ? "text-primary" : "text-muted-foreground")}
         />
@@ -199,6 +245,62 @@ function StatTile({
           {value}
         </span>
         <span className="text-xs text-muted-foreground sm:text-sm">{label}</span>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Carte d'entrée d'un mode géo : même trame que les cartes matières. */
+function GeoCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+  stats,
+  loading,
+}: {
+  href: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  stats?: GeoStats;
+  loading: boolean;
+}) {
+  const pct =
+    stats && stats.total_cards > 0
+      ? Math.round((stats.mastered / stats.total_cards) * 100)
+      : 0;
+  return (
+    <Card className="relative flex flex-col transition-colors hover:border-primary/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Icon className="size-4 shrink-0 text-muted-foreground" />
+          <Link href={href} className="hover:underline after:absolute after:inset-0">
+            {title}
+          </Link>
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="mt-auto space-y-3">
+        {loading ? (
+          <Skeleton className="h-10" />
+        ) : stats ? (
+          <>
+            <Progress
+              value={pct}
+              className="h-1.5"
+              aria-label={`${pct} % de cartes maîtrisées`}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="muted" className="tabular">
+                {stats.mastered}/{stats.total_cards} maîtrisées
+              </Badge>
+              {stats.due_now > 0 && (
+                <Badge className="tabular">{stats.due_now} à réviser</Badge>
+              )}
+            </div>
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Home, Settings } from "lucide-react";
+import { Globe, GraduationCap, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
+// `nav` est aussi rendu en icônes seules dans MobileHeader : une entrée par mode
+// géo saturerait la barre à 360 px. Les capitales s'atteignent depuis l'accueil.
 const nav = [
   { href: "/", label: "Accueil", icon: Home },
+  { href: "/geo/flags", label: "Géographie", icon: Globe },
   { href: "/settings", label: "Réglages", icon: Settings },
 ];
 
@@ -59,7 +62,19 @@ export function MobileHeader() {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-card/80 px-4 py-3 backdrop-blur md:hidden">
       <Brand />
-      <ThemeToggle />
+      <div className="flex items-center gap-1">
+        {nav.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-label={label}
+            className="flex size-11 items-center justify-center rounded-md text-muted-foreground active:bg-accent"
+          >
+            <Icon className="size-5" />
+          </Link>
+        ))}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
