@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api/client";
-import { cn, flagEmoji } from "@/lib/utils";
+import { cn, flagSrc } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,9 +184,14 @@ export default function GeoCapitalsPage() {
               key={current.card_id}
               className="animate-reveal p-6 text-center sm:p-8"
             >
-              <span className="text-4xl leading-none" aria-hidden>
-                {flagEmoji(current.iso2)}
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={flagSrc(current.iso2)}
+                alt=""
+                width={72}
+                height={48}
+                className="mx-auto h-auto w-16 rounded border"
+              />
               <h1 className="mt-3 break-words text-2xl font-semibold leading-snug">
                 Capitale de {current.country_name} ?
               </h1>

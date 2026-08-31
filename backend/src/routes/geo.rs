@@ -86,7 +86,6 @@ struct FlagQueueRow {
     state: CardState,
     due: DateTime<Utc>,
     reps: i32,
-    options: Vec<String>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -124,22 +123,12 @@ async fn queue(
 
     let items: Vec<GeoQueueItem> = match kind {
         GeoKind::Flag => {
-            // The right name hides among 3 random distractors — same continent
-            // first when available — and the 4 options are shuffled in SQL, so
-            // the client cannot tell which one is expected.
+            // Only the iso2 travels: it is the question (the client renders the
+            // matching SVG), and the name is typed, not picked from a list.
             let sql = format!(
-                "SELECT c.id AS card_id, co.iso2, co.continent, c.state, c.due, c.reps, \
-                   ARRAY(SELECT n FROM unnest(array_append(d.distractors, co.name_fr)) AS n \
-                         ORDER BY random()) AS options \
+                "SELECT c.id AS card_id, co.iso2, co.continent, c.state, c.due, c.reps \
                  FROM geo_cards c \
                  JOIN geo_countries co ON co.iso2 = c.iso2 \
-                 CROSS JOIN LATERAL (\
-                   SELECT ARRAY(\
-                     SELECT o.name_fr FROM geo_countries o \
-                     WHERE o.iso2 <> co.iso2 \
-                     ORDER BY (o.continent = co.continent) DESC, random() LIMIT 3\
-                   ) AS distractors\
-                 ) d \
                  WHERE c.kind = $1 {continent_clause} \
                  ORDER BY c.due ASC LIMIT $2"
             );
@@ -156,7 +145,6 @@ async fn queue(
                 .map(|r| GeoQueueItem::Flag {
                     card_id: r.card_id,
                     iso2: r.iso2,
-                    options: r.options,
                     continent: r.continent,
                     state: r.state,
                     due: r.due,
@@ -275,17 +263,12 @@ async fn answer(
         GeoKind::Flag => (card.name_fr, card.name_accepted),
         GeoKind::Capital => (card.capital_fr, card.capital_accepted),
     };
-    let correct = match card.kind {
-        // Multiple choice: the answer is a click on a displayed label, so typo
-        // tolerance would only serve to validate a neighbouring wrong option
-        // (Islande for Irlande, Zambie for Gambie).
-        GeoKind::Flag => geo_answer::matches_exact(&body.given, &accepted),
-        GeoKind::Capital => {
-            geo_answer::matches_exact(&body.given, &accepted)
-                || (geo_answer::matches_typed(&body.given, &accepted)
-                    && !is_another_countrys_answer(&s, card.kind, &body.given, &accepted).await?)
-        }
-    };
+    // Both modes are typed, so a typo is forgiven — unless the near-miss is
+    // exactly another country's answer, which is a knowledge error rather than
+    // a slip (Islande for Irlande, Kingston for Kingstown).
+    let correct = geo_answer::matches_exact(&body.given, &accepted)
+        || (geo_answer::matches_typed(&body.given, &accepted)
+            && !is_another_countrys_answer(&s, card.kind, &body.given, &accepted).await?);
     // Binary input: right → Good (3), wrong → Again (1). Hard/Easy would need
     // a self-assessment the typed answer does not carry.
     let rating: i16 = if correct { 3 } else { 1 };

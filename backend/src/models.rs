@@ -645,9 +645,8 @@ pub struct GeoCountry {
 pub enum GeoQueueItem {
     Flag {
         card_id: Uuid,
+        /// The question itself: the client renders /flags/{iso2}.svg.
         iso2: String,
-        /// 4 shuffled country names, the right one among them.
-        options: Vec<String>,
         continent: String,
         state: CardState,
         due: DateTime<Utc>,

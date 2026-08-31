@@ -45,17 +45,16 @@ pub fn normalize(s: &str) -> String {
 }
 
 /// Strict match: normalization and an optional leading article only, no typo
-/// tolerance. This is what multiple choice needs — the player *clicks* a
-/// displayed label, so a typo is impossible, while two options can legitimately
-/// sit one edit apart (Irlande/Islande, Zambie/Gambie).
+/// tolerance. Used for the first pass, and to tell a slip from a real mistake:
+/// a near-miss that is *exactly* another country's answer must not pass, since
+/// real answers sit one edit apart (Irlande/Islande, Kingston/Kingstown).
 pub fn matches_exact(given: &str, accepted: &[String]) -> bool {
     compare(given, accepted, false)
 }
 
-/// Match for a *typed* answer: same as `matches_exact`, plus a single typo once
-/// the expected answer is long enough. Callers must still guard against a fuzzy
-/// hit that is in fact another country's real answer (Kingston/Kingstown) —
-/// see `routes::geo`.
+/// Same, plus a single typo once the expected answer is long enough. Callers
+/// must still guard against a fuzzy hit that is in fact another country's real
+/// answer — see `routes::geo`.
 pub fn matches_typed(given: &str, accepted: &[String]) -> bool {
     compare(given, accepted, true)
 }
@@ -315,13 +314,12 @@ mod tests {
         assert!(!matches_typed("australie", &acc(&["Autriche"])));
     }
 
-    // ---- matches_exact: multiple choice ----
+    // ---- matches_exact: collision guard (used by routes::geo) ----
 
     #[test]
     fn exact_mode_refuses_one_edit_neighbours() {
-        // Clicking a *displayed* option is never a typo, and real option pairs
-        // sit one edit apart — often together, since distractors favour the
-        // same continent.
+        // These are the pairs the guard must separate: each is a real country
+        // name, so typing one for the other is a mistake, not a slip.
         assert!(!matches_exact("Islande", &acc(&["Irlande"])));
         assert!(!matches_exact("Irlande", &acc(&["Islande"])));
         assert!(!matches_exact("Zambie", &acc(&["Gambie"])));
@@ -330,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_mode_still_accepts_the_right_option() {
+    fn exact_mode_still_accepts_the_right_answer() {
         assert!(matches_exact("Irlande", &acc(&["Irlande"])));
         assert!(matches_exact("cote d ivoire", &acc(&["Côte d'Ivoire"])));
         assert!(matches_exact("caire", &acc(&["Le Caire"])));
